@@ -117,3 +117,110 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
 
         if updated:
             self.async_set_updated_data(self.data)
+
+    # Command methods - delegate to the Olarm API client
+    async def send_zone_bypass(self, device_id: str, zone_num: int) -> None:
+        """Send zone bypass command."""
+        await self._olarm_connect_client.send_device_zone_bypass(device_id, zone_num)
+
+    async def send_zone_unbypass(self, device_id: str, zone_num: int) -> None:
+        """Send zone unbypass command."""
+        await self._olarm_connect_client.send_device_zone_unbypass(device_id, zone_num)
+
+    async def send_pgm_open(self, device_id: str, pgm_num: int) -> None:
+        """Send PGM open command."""
+        await self._olarm_connect_client.send_device_pgm_open(device_id, pgm_num)
+
+    async def send_pgm_close(self, device_id: str, pgm_num: int) -> None:
+        """Send PGM close command."""
+        await self._olarm_connect_client.send_device_pgm_close(device_id, pgm_num)
+
+    async def send_pgm_pulse(self, device_id: str, pgm_num: int) -> None:
+        """Send PGM pulse command."""
+        await self._olarm_connect_client.send_device_pgm_pulse(device_id, pgm_num)
+
+    async def send_ukey_activate(self, device_id: str, ukey_num: int) -> None:
+        """Send utility key activate command."""
+        await self._olarm_connect_client.send_device_ukey_activate(device_id, ukey_num)
+
+    async def send_link_output_open(
+        self, device_id: str, link_id: str, output_num: int
+    ) -> None:
+        """Send LINK output open command."""
+        await self._olarm_connect_client.send_device_link_output_open(
+            device_id, link_id, output_num
+        )
+
+    async def send_link_output_close(
+        self, device_id: str, link_id: str, output_num: int
+    ) -> None:
+        """Send LINK output close command."""
+        await self._olarm_connect_client.send_device_link_output_close(
+            device_id, link_id, output_num
+        )
+
+    async def send_link_output_pulse(
+        self, device_id: str, link_id: str, output_num: int
+    ) -> None:
+        """Send LINK output pulse command."""
+        await self._olarm_connect_client.send_device_link_output_pulse(
+            device_id, link_id, output_num
+        )
+
+    async def send_link_relay_unlatch(
+        self, device_id: str, link_id: str, relay_num: int
+    ) -> None:
+        """Send LINK relay unlatch command."""
+        await self._olarm_connect_client.send_device_link_relay_unlatch(
+            device_id, link_id, relay_num
+        )
+
+    async def send_link_relay_latch(
+        self, device_id: str, link_id: str, relay_num: int
+    ) -> None:
+        """Send LINK relay latch command."""
+        await self._olarm_connect_client.send_device_link_relay_latch(
+            device_id, link_id, relay_num
+        )
+
+    async def send_link_relay_pulse(
+        self, device_id: str, link_id: str, relay_num: int
+    ) -> None:
+        """Send LINK relay pulse command."""
+        await self._olarm_connect_client.send_device_link_relay_pulse(
+            device_id, link_id, relay_num
+        )
+
+    async def send_max_output_open(self, device_id: str, output_num: int) -> None:
+        """Send MAX output open command."""
+        await self._olarm_connect_client.send_device_max_output_open(
+            device_id, output_num
+        )
+
+    async def send_max_output_close(self, device_id: str, output_num: int) -> None:
+        """Send MAX output close command."""
+        await self._olarm_connect_client.send_device_max_output_close(
+            device_id, output_num
+        )
+
+    async def send_max_output_pulse(self, device_id: str, output_num: int) -> None:
+        """Send MAX output pulse command."""
+        await self._olarm_connect_client.send_device_max_output_pulse(
+            device_id, output_num
+        )
+
+    async def send_area_disarm(self, device_id: str, area_num: int) -> None:
+        """Send area disarm command."""
+        await self._olarm_connect_client.send_device_area_disarm(device_id, area_num)
+
+    async def send_area_arm(self, device_id: str, area_num: int) -> None:
+        """Send area arm away command."""
+        await self._olarm_connect_client.send_device_area_arm(device_id, area_num)
+
+    async def send_area_stay(self, device_id: str, area_num: int) -> None:
+        """Send area arm home (stay) command."""
+        await self._olarm_connect_client.send_device_area_stay(device_id, area_num)
+
+    async def send_area_sleep(self, device_id: str, area_num: int) -> None:
+        """Send area arm night (sleep) command."""
+        await self._olarm_connect_client.send_device_area_sleep(device_id, area_num)

@@ -29,7 +29,9 @@ class OlarmData:
 type OlarmConfigEntry = ConfigEntry[OlarmData]
 
 _PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
 ]
 
 _LOGGER = logging.getLogger(__name__)
