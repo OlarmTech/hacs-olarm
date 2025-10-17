@@ -1,7 +1,7 @@
 """Support for Olarm alarm control panels.
 
-Alarm control panels represent the areas on an alarm system that can be armed
-and disarmed. Each area can be armed in different modes (away, home, night).
+An Olarm device connected to an alarm system can have upto 8 areas / partitions.
+These can be armed, disarmed or partially armed.
 """
 
 from __future__ import annotations
@@ -74,6 +74,7 @@ def load_area_panels(
                 coordinator,
                 device_id,
                 area_index,
+                area_state,
                 area_label,
             )
         )
@@ -94,6 +95,7 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         coordinator: OlarmDataUpdateCoordinator,
         device_id: str,
         area_index: int,
+        area_state: str,
         area_label: str,
     ) -> None:
         """Initialize the alarm control panel."""
@@ -104,6 +106,7 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         # Store area-specific attributes
         self.area_index = area_index
         self.area_label = area_label
+        self.area_state = area_state
 
         # Set unique ID and name
         self._attr_unique_id = f"{device_id}.area.{area_index}"

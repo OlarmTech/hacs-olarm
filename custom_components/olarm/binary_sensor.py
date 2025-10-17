@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 class OlarmBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes an Olarm binary sensor entity."""
 
-    value_fn: Callable[[OlarmDataUpdateCoordinator, int | None], bool]
+    value_fn: Callable[[OlarmDataUpdateCoordinator, int, str | None], bool]
     name_fn: Callable[[int, str], str]
     unique_id_fn: Callable[[str, int], str]
 
@@ -43,7 +43,7 @@ class OlarmBinarySensorEntityDescription(BinarySensorEntityDescription):
 SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     "zone": OlarmBinarySensorEntityDescription(
         key="zone",
-        value_fn=lambda coord, index: (
+        value_fn=lambda coord, index, link_id: (
             coord.data is not None
             and coord.data.device_state is not None
             and coord.data.device_state.get("zones", [])[index] == "a"
@@ -53,7 +53,7 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     ),
     "zone_bypass": OlarmBinarySensorEntityDescription(
         key="zone_bypass",
-        value_fn=lambda coord, index: (
+        value_fn=lambda coord, index, link_id: (
             coord.data is not None
             and coord.data.device_state is not None
             and coord.data.device_state.get("zones", [])[index] == "b"
@@ -63,13 +63,66 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     ),
     "ac_power": OlarmBinarySensorEntityDescription(
         key="ac_power",
-        value_fn=lambda coord, _: (
+        value_fn=lambda coord, index, link_id: (
             coord.data is not None
             and coord.data.device_state is not None
             and coord.data.device_state.get("powerAC") == "ok"
         ),
         name_fn=lambda index, label: f"{label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.ac_power",
+    ),
+    "link_input": OlarmBinarySensorEntityDescription(
+        key="link_input",
+        value_fn=lambda coord, index, link_id: (
+            coord.data is not None
+            and coord.data.device_links is not None
+            and link_id is not None
+            and coord.data.device_links.get(link_id, {}).get("inputs", [])[index] == "high"
+        ),
+        name_fn=lambda index, label: f"LINK Input {index + 1:02} - {label}",
+        unique_id_fn=lambda device_id, index: f"{device_id}.link.input.{index}",
+    ),
+    "link_output": OlarmBinarySensorEntityDescription(
+        key="link_output",
+        value_fn=lambda coord, index, link_id: (
+            coord.data is not None
+            and coord.data.device_links is not None
+            and link_id is not None
+            and coord.data.device_links.get(link_id, {}).get("outputs", [])[index] == "closed"
+        ),
+        name_fn=lambda index, label: f"LINK Output {index + 1:02} - {label}",
+        unique_id_fn=lambda device_id, index: f"{device_id}.link.output.{index}",
+    ),
+    "relay_output": OlarmBinarySensorEntityDescription(
+        key="relay_output",
+        value_fn=lambda coord, index, link_id: (
+            coord.data is not None
+            and coord.data.device_links is not None
+            and link_id is not None
+            and coord.data.device_links.get(link_id, {}).get("relays", [])[index] == "latched"
+        ),
+        name_fn=lambda index, label: f"LINK Relay {index + 1:02} - {label}",
+        unique_id_fn=lambda device_id, index: f"{device_id}.link.relay.{index}",
+    ),
+    "max_input": OlarmBinarySensorEntityDescription(
+        key="max_input",
+        value_fn=lambda coord, index, link_id: (
+            coord.data is not None
+            and coord.data.device_io is not None
+            and coord.data.device_io.get("inputs", [])[index] == "high"
+        ),
+        name_fn=lambda index, label: f"MAX Input {index + 1:02} - {label}",
+        unique_id_fn=lambda device_id, index: f"{device_id}.max.input.{index}",
+    ),
+    "max_output": OlarmBinarySensorEntityDescription(
+        key="max_output",
+        value_fn=lambda coord, index, link_id: (
+            coord.data is not None
+            and coord.data.device_io is not None
+            and coord.data.device_io.get("outputs", [])[index] == "closed"
+        ),
+        name_fn=lambda index, label: f"MAX Output {index + 1:02} - {label}",
+        unique_id_fn=lambda device_id, index: f"{device_id}.max.output.{index}",
     ),
 }
 
@@ -95,6 +148,8 @@ async def async_setup_entry(
     sensors: list[OlarmBinarySensor] = []
     load_zone_sensors(coordinator, config_entry, sensors)
     load_ac_power_sensor(coordinator, config_entry, sensors)
+    load_link_sensors(coordinator, config_entry, sensors)
+    load_max_sensors(coordinator, config_entry, sensors)
 
     async_add_entities(sensors)
 
@@ -148,6 +203,124 @@ def load_ac_power_sensor(
     )
 
 
+def load_link_sensors(
+    coordinator: OlarmDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    sensors: list[OlarmBinarySensor],
+) -> None:
+    """Load LINK inputs, outputs, and relays in latch mode."""
+    if (
+        coordinator.data.device_profile_links is None
+        or len(coordinator.data.device_profile_links) == 0
+        or coordinator.data.device_links is None
+    ):
+        return
+
+    device_id = config_entry.data["device_id"]
+    for link_id, link_data in coordinator.data.device_profile_links.items():
+        link_name = link_data.get("name", "Unnamed Link")
+
+        # Load IO items (inputs and outputs)
+        io_items = link_data.get("io", [])
+        for io_index, io in enumerate(io_items):
+            # Only create sensors for enabled inputs/outputs
+            if io.get("enabled"):
+                if io.get("type") == "input":
+                    io_state = coordinator.data.device_links[link_id]["inputs"][io_index]
+                    sensors.append(
+                        OlarmBinarySensor(
+                            coordinator,
+                            SENSOR_DESCRIPTIONS["link_input"],
+                            f"{device_id}_{link_id}",
+                            io_index,
+                            io_state,
+                            io.get("label", ""),
+                            None,
+                            link_id,
+                            link_name,
+                        )
+                    )
+                elif io.get("type") == "output" and io.get("outputMode") == "latch":
+                    io_state = coordinator.data.device_links[link_id]["outputs"][io_index]
+                    sensors.append(
+                        OlarmBinarySensor(
+                            coordinator,
+                            SENSOR_DESCRIPTIONS["link_output"],
+                            f"{device_id}_{link_id}",
+                            io_index,
+                            io_state,
+                            io.get("label", ""),
+                            None,
+                            link_id,
+                            link_name,
+                        )
+                    )
+
+        # Load relay items
+        relay_items = link_data.get("relays", [])
+        for relay_index, relay in enumerate(relay_items):
+            # Only create sensors for enabled relays in latch mode
+            if relay.get("enabled") and relay.get("relayMode") == "latch":
+                relay_state = coordinator.data.device_links[link_id]["relays"][relay_index]
+                sensors.append(
+                    OlarmBinarySensor(
+                        coordinator,
+                        SENSOR_DESCRIPTIONS["relay_output"],
+                        f"{device_id}_{link_id}",
+                        relay_index,
+                        relay_state,
+                        relay.get("label", ""),
+                        None,
+                        link_id,
+                        link_name,
+                    )
+                )
+
+
+def load_max_sensors(
+    coordinator: OlarmDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    sensors: list[OlarmBinarySensor],
+) -> None:
+    """Load Max IO inputs and outputs (outputs only in latch mode)."""
+    if (
+        coordinator.data.device_profile_io is None
+        or coordinator.data.device_profile_io.get("io") is None
+        or coordinator.data.device_io is None
+    ):
+        return
+
+    device_id = config_entry.data["device_id"]
+    for io_index, io in enumerate(coordinator.data.device_profile_io.get("io")):
+        if io.get("enabled"):
+            if io.get("type") == "input":
+                io_state = coordinator.data.device_io["inputs"][io_index]
+                sensors.append(
+                    OlarmBinarySensor(
+                        coordinator,
+                        SENSOR_DESCRIPTIONS["max_input"],
+                        device_id,
+                        io_index,
+                        io_state,
+                        io.get("label", ""),
+                        None,
+                    )
+                )
+            elif io.get("type") == "output" and io.get("outputMode") == "latch":
+                io_state = coordinator.data.device_io["outputs"][io_index]
+                sensors.append(
+                    OlarmBinarySensor(
+                        coordinator,
+                        SENSOR_DESCRIPTIONS["max_output"],
+                        device_id,
+                        io_index,
+                        io_state,
+                        io.get("label", ""),
+                        None,
+                    )
+                )
+
+
 class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
     """Define an Olarm Binary Sensor."""
 
@@ -180,6 +353,13 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
                 "zone_number": f"{sensor_index + 1:03}",
                 "zone_label": " - " + sensor_label if sensor_label else "",
             }
+        
+        # For link/max sensors, override the name to include link_name
+        if self.entity_description.key in ("link_input", "link_output", "relay_output"):
+            self._attr_name = f"{link_name} {self.entity_description.name_fn(sensor_index, sensor_label)}"
+        elif self.entity_description.key in ("max_input", "max_output"):
+            self._attr_name = self.entity_description.name_fn(sensor_index, sensor_label)
+        
         self._attr_unique_id = self.entity_description.unique_id_fn(
             device_id, sensor_index
         )
@@ -203,9 +383,9 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
             link_id  # only used for olarm LINKs to track which LINK as can have upto 8
         )
 
-        # initialize state via description
+        # initialize state using description value_fn
         self._attr_is_on = self.entity_description.value_fn(
-            self.coordinator, self.sensor_index
+            self.coordinator, self.sensor_index, self.link_id
         )
 
     @callback
@@ -214,17 +394,19 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         if not self.coordinator.data:
             return
 
-        # Extract the data from coordinator
-        device_state = self.coordinator.data.device_state
-
         # Store the previous state to check if it changed
         previous_state = self._attr_is_on
 
-        # compute state using description
-        if device_state is not None:
-            self._attr_is_on = self.entity_description.value_fn(
-                self.coordinator, self.sensor_index
-            )
+        # Update state using description value_fn
+        self._attr_is_on = self.entity_description.value_fn(
+            self.coordinator, self.sensor_index, self.link_id
+        )
+
+        # Update sensor_state for zone sensors for extra attributes
+        if self.entity_description.key in ("zone", "zone_bypass"):
+            device_state = self.coordinator.data.device_state
+            if device_state is not None:
+                self.sensor_state = device_state.get("zones", [])[self.sensor_index]
 
         # Only schedule state update if the state actually changed
         if self._attr_is_on != previous_state:
