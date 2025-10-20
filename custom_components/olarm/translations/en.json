@@ -12,6 +12,8 @@
             "oauth_failed": "Error while obtaining access token.",
             "oauth_timeout": "Timeout resolving OAuth token.",
             "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+            "reauth_account_not_found": "The account you are trying to reauthenticate could not be found. Please remove and re-add the integration.",
+            "reauth_successful": "Successfully reauthenticated with Olarm.",
             "user_rejected_authorize": "Account linking rejected: {error}"
         },
         "create_entry": {

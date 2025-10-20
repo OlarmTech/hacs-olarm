@@ -1,60 +1,71 @@
 # Olarm Integration for Home Assistant
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-This is a custom integration for [Olarm](https://www.olarm.com/) alarm systems for Home Assistant, available through HACS while awaiting official Home Assistant core approval.
+Integration for [Olarm](https://www.olarm.com/) smart alarm communicators. Olarm transforms traditional alarm systems into connected, app-controlled security solutions, working with major alarm panels (Paradox, DSC, Texecom, IDS, Honeywell and more).
+
+## Supported Devices
+
+- Olarm GEN1 – Paradox
+- Olarm GEN1 – Universal
+- Olarm PRO
+- Olarm PRO 4G
+- Olarm MAX
 
 ## Features
 
-- OAuth2 authentication with Olarm
 - Real-time monitoring via MQTT
-- Binary sensors for alarm zones and system status
-- Configuration through Home Assistant UI
+- Binary sensors for alarm zones, areas, and system status
+- LINK module support for expanded I/O capabilities
+- MAX module support
+- OAuth2 authentication
 
-## Installation
+## Prerequisites
 
-### HACS Installation (Recommended)
+- An active Olarm account
+- A compatible Olarm device connected to a supported alarm panel
+- An active subscription for the device
+- **API Access enabled** in the Olarm app
+
+### Important: Enable API Access
+
+Before installing the integration:
+
+1. Open the Olarm App
+2. Go to **Profile** > **Device List** > **[Select Device]** > **Developer Settings**
+3. Enable **API Access**
+
+## Installation via HACS
 
 1. Make sure you have [HACS](https://hacs.xyz/) installed
 2. In Home Assistant, go to HACS > Integrations
 3. Click the three dots in the top right corner and select "Custom repositories"
-4. Add this repository URL: `https://github.com/olarmtech/hacs-olarm` (or your actual GitHub URL)
+4. Add this repository URL: `https://github.com/olarmtech/hacs-olarm`
 5. Select category: "Integration"
 6. Click "Add"
 7. Find "Olarm" in the integration list and click "Download"
 8. Restart Home Assistant
-
-### Manual Installation
-
-1. Copy the `custom_components/olarm` folder to your Home Assistant's `custom_components` directory
-2. If the `custom_components` directory doesn't exist, create it in the same location as your `configuration.yaml`
-3. Restart Home Assistant
 
 ## Configuration
 
 1. Go to Settings > Devices & Services
 2. Click "+ Add Integration"
 3. Search for "Olarm"
-4. Follow the OAuth2 authentication flow to link your Olarm account
+4. Follow the OAuth2 authentication flow
 
-## Requirements
+## Known Limitations
 
-- Home Assistant 2024.1.0 or newer
-- Olarm account with active alarm system
-- Internet connection for OAuth2 and MQTT
+- Maximum of 5 Olarm devices per integration instance
+- Only one Olarm user account per Home Assistant instance
 
-## Dependencies
+## Issues / Feature Requests
 
-This integration requires:
-- `olarmflowclient==1.0.2` (automatically installed)
-- Home Assistant Application Credentials component
+Please log issues and feature requests in Github issues 👆
 
-## Support
+## Contributing
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/olarmtech/hacs-olarm).
-
-For Olarm-specific support, visit [Olarm Support](https://www.olarm.com/support).
+Contributions are welcome! Please open an issue or submit a pull request. Please see CONTRIBUTING.md 
 
 ## License
 
-This integration is released under the Apache License 2.0. See [LICENSE](LICENSE) for details.
+Apache License 2.0. See [LICENSE](LICENSE) for details.

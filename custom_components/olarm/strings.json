@@ -28,7 +28,9 @@
       "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
       "user_rejected_authorize": "Account linking rejected: {error}",
       "oauth_data_missing": "OAuth data is missing. Please restart the configuration flow.",
-      "no_devices_found": "No Olarm devices found in your account. Please ensure you have enabled public API access in the Olarm account for your device"
+      "no_devices_found": "No Olarm devices found in your account. Please ensure you have enabled public API access in the Olarm account for your device",
+      "reauth_successful": "Successfully reauthenticated with Olarm.",
+      "reauth_account_not_found": "The account you are trying to reauthenticate could not be found. Please remove and re-add the integration."
     },
     "create_entry": {
       "default": "Successfully authenticated"

@@ -1,32 +1,37 @@
 # Olarm Integration
 
-Integration for Olarm alarm systems, providing real-time monitoring and control through Home Assistant.
+Connect your Olarm smart alarm communicator to Home Assistant for real-time monitoring and automation.
+
+## What is Olarm?
+
+[Olarm](https://www.olarm.com) transforms traditional alarm systems into connected, app-controlled security solutions. Works with major alarm panels including Paradox, DSC, Texecom, IDS, and Honeywell.
 
 ## Features
 
-- **OAuth2 Authentication**: Secure authentication with Olarm cloud services
-- **Real-time Updates**: MQTT-based push notifications for instant status updates
-- **Binary Sensors**: Monitor zones, areas, and system status
-- **Easy Configuration**: Set up through Home Assistant's UI with config flow
+- **Real-time Updates**: MQTT-based push notifications for instant status changes
+- **Binary Sensors**: Monitor zones, system status, and LINK/MAX modules
+- **OAuth2 Authentication**: Secure cloud connection
+- **Easy Setup**: Configure through Home Assistant UI
 
-## About Olarm
+## Supported Devices
 
-Olarm is a smart alarm monitoring solution that connects traditional alarm systems to the cloud, enabling remote monitoring, control, and integration with smart home platforms.
+- Olarm GEN1 (Paradox & Universal)
+- Olarm PRO / PRO 4G
+- Olarm MAX
 
-## What You'll Need
+## Prerequisites
 
-- An active Olarm account
-- Olarm device connected to your alarm system
-- Internet connection for cloud services
+- Active Olarm account with subscription
+- Compatible Olarm device connected to your alarm panel
+- **API Access enabled** in the Olarm app (Profile > Device List > [Device] > Developer Settings > Enable)
 
 ## Getting Started
 
-After installation:
-1. Navigate to Settings > Devices & Services
-2. Click "+ Add Integration"
-3. Search for "Olarm"
-4. Complete the OAuth2 authentication process
-5. Your Olarm devices and zones will be automatically discovered
+1. Enable API Access in the Olarm app
+2. Install this integration via HACS
+3. Go to Settings > Devices & Services
+4. Click "+ Add Integration" and search for "Olarm"
+5. Complete OAuth2 authentication
+6. Your devices will be automatically discovered
 
-For detailed documentation, visit the [GitHub repository](https://github.com/olarmtech/hacs-olarm).
-
+For more information, visit [Olarm Website](https://www.olarm.com)
