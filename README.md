@@ -1,6 +1,6 @@
 # Olarm Integration for Home Assistant
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
 Integration for [Olarm](https://www.olarm.com/) smart alarm communicators. Olarm transforms traditional alarm systems into connected, app-controlled security solutions, working with major alarm panels (Paradox, DSC, Texecom, IDS, Honeywell and more).
 
