@@ -158,35 +158,28 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
             )
             self.async_write_ha_state()
 
-    async def async_alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm command."""
-        _LOGGER.debug("Disarming alarm area %s", self.area_index)
-        await self.coordinator.send_area_disarm(self.device_id, self.area_index)
-        # Set to pending state immediately for UI feedback
+    async def _async_send_command(self, command: str) -> None:
+        """Send command and provide UI feedback."""
+        _LOGGER.debug("AlarmControlPanel command: %s - %s", self._attr_name, command)
+
+        await self.coordinator.send_command(command, self.device_id, self.area_index + 1)
+        # Set to pending state for UI feedback while waiting for MQTT state to come through
         self._attr_alarm_state = AlarmControlPanelState.PENDING
         self.async_write_ha_state()
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Send disarm command."""
+        await self._async_send_command("area_disarm")
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        _LOGGER.debug("Arming away alarm area %s", self.area_index)
-        await self.coordinator.send_area_arm(self.device_id, self.area_index)
-        # Set to pending state immediately for UI feedback
-        self._attr_alarm_state = AlarmControlPanelState.PENDING
-        self.async_write_ha_state()
+        await self._async_send_command("area_arm")
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home (stay) command."""
-        _LOGGER.debug("Arming home (stay) alarm area %s", self.area_index)
-        await self.coordinator.send_area_stay(self.device_id, self.area_index)
-        # Set to pending state immediately for UI feedback
-        self._attr_alarm_state = AlarmControlPanelState.PENDING
-        self.async_write_ha_state()
+        await self._async_send_command("area_stay")
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night (sleep) command."""
-        _LOGGER.debug("Arming night (sleep) alarm area %s", self.area_index)
-        await self.coordinator.send_area_sleep(self.device_id, self.area_index)
-        # Set to pending state immediately for UI feedback
-        self._attr_alarm_state = AlarmControlPanelState.PENDING
-        self.async_write_ha_state()
+        await self._async_send_command("area_sleep")
 
