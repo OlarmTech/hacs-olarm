@@ -289,7 +289,7 @@ def load_max_sensors(
     ):
         return
 
-    for io_index, io in enumerate(coordinator.data.device_profile_io.get("io")):
+    for io_index, io in enumerate(coordinator.data.device_profile_io.get("io", [])):
         if io.get("enabled"):
             if io.get("type") == "input":
                 io_state = coordinator.data.device_io["inputs"][io_index]
@@ -333,7 +333,7 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         sensor_state: str,
         sensor_label: str,
         sensor_class: int | None = None,
-        link_id: int | None = None,
+        link_id: str | None = None,
         link_name: str | None = "",
     ) -> None:
         """Init the class."""

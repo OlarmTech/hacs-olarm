@@ -90,11 +90,11 @@ class OlarmOauth2FlowHandler(
         _LOGGER.debug(api_result)
         self._devices = api_result.get("data")
         self._user_id = api_result.get("userId")
-        
+
         # Check if this is a reauth flow
         if self.context.get(CONF_SOURCE) == "reauth":
             return await self.async_step_reauth_complete()
-        
+
         return await self.async_step_device()
 
     async def async_step_device(
