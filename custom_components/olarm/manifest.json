@@ -1,12 +1,12 @@
 {
   "domain": "olarm",
   "name": "Olarm",
-  "codeowners": ["@olarmtech"],
+  "codeowners": ["@olarmtech", "@pelicarno"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
-  "documentation": "https://github.com/olarmtech/hacs-olarm",
+  "documentation": "https://github.com/OlarmTech/hacs-olarm",
   "iot_class": "cloud_push",
-  "issue_tracker": "https://github.com/olarmtech/hacs-olarm/issues",
+  "issue_tracker": "https://github.com/OlarmTech/hacs-olarm/issues",
   "quality_scale": "bronze",
   "requirements": ["olarmflowclient==1.0.2"],
   "version": "1.0.2"
