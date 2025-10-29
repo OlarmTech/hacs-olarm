@@ -188,6 +188,4 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
             else:
                 await client_fn(device_id, num)
         except OlarmFlowClientApiError as err:
-            raise HomeAssistantError(
-                f"Command '{command}' failed: {err}"
-            ) from err
+            raise HomeAssistantError(f"Command '{command}' failed: {err}") from err
