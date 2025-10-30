@@ -162,7 +162,9 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         """Send command and provide UI feedback."""
         _LOGGER.debug("AlarmControlPanel command: %s - %s", self._attr_name, command)
 
-        await self.coordinator.send_command(command, self.device_id, self.area_index + 1)
+        await self.coordinator.send_command(
+            command, self.device_id, self.area_index + 1
+        )
         # Set to pending state for UI feedback while waiting for MQTT state to come through
         self._attr_alarm_state = AlarmControlPanelState.PENDING
         self.async_write_ha_state()
@@ -182,4 +184,3 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night (sleep) command."""
         await self._async_send_command("area_sleep")
-
