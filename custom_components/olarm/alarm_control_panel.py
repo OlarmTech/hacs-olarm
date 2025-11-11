@@ -33,6 +33,19 @@ STATE_MAP: dict[str, AlarmControlPanelState] = {
     "emergency": AlarmControlPanelState.TRIGGERED,
     "fire": AlarmControlPanelState.TRIGGERED,
     "medical": AlarmControlPanelState.TRIGGERED,
+    "partarm1": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    "partarm2": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    "partarm3": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    "partarm4": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    "stayarm1": AlarmControlPanelState.ARMED_HOME,
+    "stayarm2": AlarmControlPanelState.ARMED_HOME,
+    "stayarm3": AlarmControlPanelState.ARMED_HOME,
+    "stayarm4": AlarmControlPanelState.ARMED_HOME,
+    "entrydelay": AlarmControlPanelState.PENDING,
+    "customarm1": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    "customarm2": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    "customarm3": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    "customarm4": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
 }
 
 

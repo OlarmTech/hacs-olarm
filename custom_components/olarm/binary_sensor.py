@@ -175,7 +175,7 @@ def load_zone_sensors(
                 zone_index,
                 zone_state,
                 zone_label,
-                zone_class,
+                zone_class if sensor_type != "zone_bypass" else 0,
             )
             for sensor_type in ("zone", "zone_bypass")
         )
