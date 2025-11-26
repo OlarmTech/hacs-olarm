@@ -26,12 +26,13 @@ Integration for [Olarm](https://www.olarm.com/) smart alarm communicators. Olarm
 - A compatible Olarm device connected to a supported alarm panel
 - An active subscription for the device
 - **API Access enabled** in the Olarm app
+  - This needs to be enabled on the **primary user** if a secondary user is used for the integration.
 
 ### Important: Enable API Access
 
 Before installing the integration:
 
-1. Open the Olarm App
+1. Open the Olarm App of the **primary user**
 2. Go to **Profile** > **Device List** > **[Select Device]** > **Developer Settings**
 3. Enable **API Access**
 
