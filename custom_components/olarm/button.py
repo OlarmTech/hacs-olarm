@@ -256,6 +256,9 @@ def load_pgm_buttons(
     if pgm_controls:
         pgm_labels = device_profile.get("pgmLabels", [])
         for pgm_index, pgm_control in enumerate(pgm_controls):
+            # Default to "000" if pgm_control is empty
+            if not pgm_control:
+                pgm_control = "000"
             if pgm_control[0] == "1":  # PGM is enabled
                 pgm_label = pgm_labels[pgm_index] if pgm_index < len(pgm_labels) else ""
                 # Add open/close buttons
