@@ -9,5 +9,5 @@
   "issue_tracker": "https://github.com/olarmtech/hacs-olarm/issues",
   "quality_scale": "bronze",
   "requirements": ["olarmflowclient==1.0.5"],
-  "version": "1.0.6"
+  "version": "1.0.7"
 }
