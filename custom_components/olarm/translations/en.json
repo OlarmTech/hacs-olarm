@@ -12,8 +12,6 @@
             "oauth_failed": "Error while obtaining access token.",
             "oauth_timeout": "Timeout resolving OAuth token.",
             "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
-            "reauth_account_not_found": "The account you are trying to reauthenticate could not be found. Please remove and re-add the integration.",
-            "reauth_successful": "Successfully reauthenticated with Olarm.",
             "user_rejected_authorize": "Account linking rejected: {error}"
         },
         "create_entry": {
@@ -41,12 +39,21 @@
             "ac_power": {
                 "name": "AC Power"
             },
+            "ac_power_fence": {
+                "name": "AC Power"
+            },
             "zone": {
                 "name": "Zone {zone_number} {zone_label}"
             },
             "zone_bypass": {
                 "name": "Zone {zone_number} Bypass {zone_label}"
             }
+        }
+    },
+    "issues": {
+        "mqtt_disconnected": {
+            "description": "The MQTT connection to the Olarm service has been lost: {reason}\n\nThe integration will automatically attempt to reconnect in the background. If this issue persists, check your internet connection and verify the Olarm service is operational.\n\nThis issue will clear automatically when the connection is restored.",
+            "title": "MQTT connection to Olarm service lost"
         }
     }
 }
