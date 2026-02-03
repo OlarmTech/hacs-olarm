@@ -7,6 +7,7 @@ These can be armed, disarmed or partially armed.
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -142,12 +143,19 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
 
         areas = self.coordinator.data.device_state.get("areas", [])
         if self.area_index < len(areas):
-            area_state = areas[self.area_index]
+            self.area_state = areas[self.area_index]
             self._attr_alarm_state = STATE_MAP.get(
-                area_state, AlarmControlPanelState.DISARMED
+                self.area_state, AlarmControlPanelState.DISARMED
             )
         else:
             self._attr_alarm_state = AlarmControlPanelState.DISARMED
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return extra state attributes."""
+        if self._attr_alarm_state == AlarmControlPanelState.ARMED_CUSTOM_BYPASS:
+            return {"armed_custom_bypass_profile": self.area_state}
+        return {"armed_custom_bypass_profile": None}
 
     @callback
     def _handle_coordinator_update(self) -> None:
