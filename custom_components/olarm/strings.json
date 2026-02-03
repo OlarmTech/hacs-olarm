@@ -39,6 +39,9 @@
       "ac_power": {
         "name": "AC Power"
       },
+      "ac_power_fence": {
+        "name": "AC Power"
+      },
       "zone": {
         "name": "Zone {zone_number} {zone_label}"
       },

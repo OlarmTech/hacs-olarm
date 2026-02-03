@@ -30,6 +30,7 @@ class OlarmDeviceData:
 
     device_name: str
     device_state: dict[str, Any] = field(default_factory=dict)
+    device_fence: dict[str, Any] = field(default_factory=dict)
     device_links: dict[str, Any] = field(default_factory=dict)
     device_io: dict[str, Any] = field(default_factory=dict)
     device_profile: dict[str, Any] = field(default_factory=dict)
@@ -123,6 +124,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
             device_data = OlarmDeviceData(
                 device_name=device.get("deviceName") or "Olarm Device",
                 device_state=device.get("deviceState", {}),
+                device_fence=device.get("deviceFence", {}),
                 device_links=device.get("deviceLinks", {}),
                 device_io=device.get("deviceIO", {}),
                 device_profile=device.get("deviceProfile", {}),
@@ -135,6 +137,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
                 {
                     "device_name": device_data.device_name,
                     "device_state": device_data.device_state,
+                    "device_fence": device_data.device_fence,
                 },
             )
 
@@ -153,6 +156,9 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
 
         if "deviceState" in payload:
             self.data.device_state = payload["deviceState"]
+            updated = True
+        if "deviceFence" in payload:
+            self.data.device_fence = payload["deviceFence"]
             updated = True
         if "deviceLinks" in payload:
             self.data.device_links = payload["deviceLinks"]
