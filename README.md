@@ -11,6 +11,7 @@ Integration for [Olarm](https://www.olarm.com/) smart alarm communicators. Olarm
 - Olarm PRO
 - Olarm PRO 4G
 - Olarm MAX
+- Olarm HUB - coming Q2 2026
 
 ## Features
 
@@ -18,6 +19,7 @@ Integration for [Olarm](https://www.olarm.com/) smart alarm communicators. Olarm
 - Binary sensors for alarm zones, areas, and system status
 - LINK module support for expanded I/O capabilities
 - MAX module support
+- Olarm HUB integration
 - OAuth2 authentication
 
 ## Prerequisites
