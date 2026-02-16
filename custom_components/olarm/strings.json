@@ -34,6 +34,19 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "alarm_control_panel_custom_bypass_num": "Custom bypass profile number"
+        },
+        "data_description": {
+          "alarm_control_panel_custom_bypass_num": "Profile number to use for Arm custom bypass (1 to 4)"
+        },
+        "title": "Alarm control panel options"
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "ac_power": {

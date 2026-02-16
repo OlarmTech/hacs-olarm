@@ -12,7 +12,8 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -35,6 +36,14 @@ class OlarmOauth2FlowHandler(
     _devices: list[dict[str, Any]] | None = None
     _device_id: str | None = None
     _oauth_data: dict[str, Any] | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OlarmOptionsFlow:
+        """Get options flow for this handler."""
+        return OlarmOptionsFlow()
 
     @property
     def logger(self) -> logging.Logger:
@@ -167,3 +176,30 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class OlarmOptionsFlow(OptionsFlow):
+    """Handle options flow for Olarm."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage integration options."""
+        if user_input is not None:
+            result = self.async_create_entry(data=user_input)
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            return result
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "alarm_control_panel_custom_bypass_num",
+                        default=self.config_entry.options.get(
+                            "alarm_control_panel_custom_bypass_num", 1
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+                }
+            ),
+        )

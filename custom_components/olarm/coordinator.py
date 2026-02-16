@@ -29,6 +29,8 @@ class OlarmDeviceData:
     """Data structure to hold Olarm device information."""
 
     device_name: str
+    device_alarm_type: str = ""
+    device_alarm_type_actions: dict[str, Any] = field(default_factory=dict)
     device_state: dict[str, Any] = field(default_factory=dict)
     device_fence: dict[str, Any] = field(default_factory=dict)
     device_links: dict[str, Any] = field(default_factory=dict)
@@ -123,6 +125,8 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         else:
             device_data = OlarmDeviceData(
                 device_name=device.get("deviceName") or "Olarm Device",
+                device_alarm_type=device.get("deviceAlarmType") or "",
+                device_alarm_type_actions=device.get("deviceAlarmTypeActions", {}),
                 device_state=device.get("deviceState", {}),
                 device_fence=device.get("deviceFence", {}),
                 device_links=device.get("deviceLinks", {}),
@@ -176,6 +180,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         device_id: str,
         num: int,
         link_id: str | None = None,
+        part_num: int | None = None,
     ) -> None:
         """Send a command to the Olarm API."""
         # Ensure token is valid before sending command
@@ -191,6 +196,8 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         try:
             if link_id is not None:
                 await client_fn(device_id, link_id, num)
+            elif part_num is not None:
+                await client_fn(device_id, num, part_num)
             else:
                 await client_fn(device_id, num)
         except OlarmFlowClientApiError as err:
