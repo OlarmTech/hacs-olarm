@@ -227,6 +227,7 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send partial arm command using the configured profile number."""
+        assert self.coordinator.config_entry
         part_num: int = self.coordinator.config_entry.options.get(
             "alarm_control_panel_custom_bypass_num", 1
         )

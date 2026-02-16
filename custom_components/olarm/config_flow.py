@@ -181,6 +181,15 @@ class InvalidAuth(HomeAssistantError):
 class OlarmOptionsFlow(OptionsFlow):
     """Handle options flow for Olarm."""
 
+    def _supports_custom_bypass(self) -> bool:
+        """Return True if custom bypass is supported by alarm type actions."""
+        coordinator = getattr(self.config_entry.runtime_data, "coordinator", None)
+        if not coordinator or not coordinator.data:
+            return False
+
+        area_actions = coordinator.data.device_alarm_type_actions.get("areas", [])
+        return "area-part-arm" in area_actions
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -192,14 +201,18 @@ class OlarmOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        "alarm_control_panel_custom_bypass_num",
-                        default=self.config_entry.options.get(
-                            "alarm_control_panel_custom_bypass_num", 1
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-                }
-            ),
+            data_schema=vol.Schema({
+                **(
+                    {
+                        vol.Required(
+                            "alarm_control_panel_custom_bypass_num",
+                            default=self.config_entry.options.get(
+                                "alarm_control_panel_custom_bypass_num", 1
+                            ),
+                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+                    }
+                    if self._supports_custom_bypass()
+                    else {}
+                )
+            }),
         )
