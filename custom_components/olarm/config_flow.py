@@ -194,6 +194,9 @@ class OlarmOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage integration options."""
+        if not self._supports_custom_bypass():
+            return self.async_abort(reason="no_configurable_options")
+
         if user_input is not None:
             result = self.async_create_entry(data=user_input)
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
@@ -201,18 +204,14 @@ class OlarmOptionsFlow(OptionsFlow):
 
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema({
-                **(
-                    {
-                        vol.Required(
-                            "alarm_control_panel_custom_bypass_num",
-                            default=self.config_entry.options.get(
-                                "alarm_control_panel_custom_bypass_num", 1
-                            ),
-                        ): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-                    }
-                    if self._supports_custom_bypass()
-                    else {}
-                )
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "alarm_control_panel_custom_bypass_num",
+                        default=self.config_entry.options.get(
+                            "alarm_control_panel_custom_bypass_num", 1
+                        ),
+                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+                }
+            ),
         )

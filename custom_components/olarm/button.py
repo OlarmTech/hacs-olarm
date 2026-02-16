@@ -12,6 +12,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -183,6 +184,14 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
         index,
         _: f"{device_id}.max_output_pulse.{index}",
     ),
+    "user_panic": OlarmButtonEntityDescription(
+        key="user_panic",
+        press_fn=lambda coord, device_id, index, link_id: coord.send_command(
+            "user_panic", device_id
+        ),
+        name_fn=lambda index, label, link_name: "User Panic",
+        unique_id_fn=lambda device_id, index, link_id: f"{device_id}.user_panic",
+    ),
 }
 
 
@@ -205,6 +214,7 @@ async def async_setup_entry(
     load_link_output_buttons(coordinator, config_entry, buttons)
     load_link_relay_buttons(coordinator, config_entry, buttons)
     load_max_output_buttons(coordinator, config_entry, buttons)
+    load_user_panic_button(coordinator, config_entry, buttons)
 
     async_add_entities(buttons)
 
@@ -486,6 +496,26 @@ def load_max_output_buttons(
                 )
 
 
+def load_user_panic_button(
+    coordinator: OlarmDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    buttons: list[OlarmButton],
+) -> None:
+    """Load user panic button."""
+
+    device_id = config_entry.data["device_id"]
+
+    buttons.append(
+        OlarmButton(
+            coordinator,
+            BUTTON_DESCRIPTIONS["user_panic"],
+            device_id,
+            0,
+            "User Panic",
+        )
+    )
+
+
 class OlarmButton(OlarmEntity, ButtonEntity):
     """Define an Olarm Button."""
 
@@ -535,6 +565,14 @@ class OlarmButton(OlarmEntity, ButtonEntity):
             "Button pressed: %s [%s]", self._attr_name, self.entity_description.key
         )
 
-        await self.entity_description.press_fn(
+        result = await self.entity_description.press_fn(
             self.coordinator, self.device_id, self.button_index + 1, self.link_id
         )
+
+        if self.entity_description.key == "user_panic" and result:
+            message = result.get("message", "Panic command sent")
+            async_create(
+                self.hass,
+                message,
+                title="Olarm user panic",
+            )

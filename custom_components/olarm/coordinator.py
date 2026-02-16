@@ -178,10 +178,10 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         self,
         command: str,
         device_id: str,
-        num: int,
+        num: int = 0,
         link_id: str | None = None,
         part_num: int | None = None,
-    ) -> None:
+    ) -> dict[str, Any]:
         """Send a command to the Olarm API."""
         # Ensure token is valid before sending command
         await self.async_ensure_token_valid()
@@ -195,10 +195,12 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
 
         try:
             if link_id is not None:
-                await client_fn(device_id, link_id, num)
+                result = await client_fn(device_id, link_id, num)
             elif part_num is not None:
-                await client_fn(device_id, num, part_num)
+                result = await client_fn(device_id, num, part_num)
             else:
-                await client_fn(device_id, num)
+                result = await client_fn(device_id, num)
         except OlarmFlowClientApiError as err:
             raise HomeAssistantError(f"Command '{command}' failed: {err}") from err
+
+        return result or {}
