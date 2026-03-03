@@ -211,19 +211,19 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self._async_send_command("area_disarm")
+        await self._async_send_command("device_area_disarm")
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._async_send_command("area_arm")
+        await self._async_send_command("device_area_arm")
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home (stay) command."""
-        await self._async_send_command("area_stay")
+        await self._async_send_command("device_area_stay")
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night (sleep) command."""
-        await self._async_send_command("area_sleep")
+        await self._async_send_command("device_area_sleep")
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send partial arm command using the configured profile number."""
@@ -231,4 +231,4 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         part_num: int = self.coordinator.config_entry.options.get(
             "alarm_control_panel_custom_bypass_num", 1
         )
-        await self._async_send_command("area_part_arm", part_num=part_num)
+        await self._async_send_command("device_area_part_arm", part_num=part_num)

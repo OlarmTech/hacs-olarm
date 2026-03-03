@@ -187,7 +187,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         await self.async_ensure_token_valid()
 
         # Construct the client method name from command
-        client_method_name = f"send_device_{command}"
+        client_method_name = f"send_{command}"
         client_fn = getattr(self._olarm_connect_client, client_method_name, None)
 
         if client_fn is None:
@@ -198,8 +198,10 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
                 result = await client_fn(device_id, link_id, num)
             elif part_num is not None:
                 result = await client_fn(device_id, num, part_num)
-            else:
+            elif num:
                 result = await client_fn(device_id, num)
+            else:
+                result = await client_fn(device_id)
         except OlarmFlowClientApiError as err:
             raise HomeAssistantError(f"Command '{command}' failed: {err}") from err
 
