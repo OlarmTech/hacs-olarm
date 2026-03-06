@@ -87,7 +87,8 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
             coord.data is not None
             and coord.data.device_links is not None
             and link_id is not None
-            and coord.data.device_links.get(link_id, {}).get("inputs", [])[index] == "high"
+            and coord.data.device_links.get(link_id, {}).get("inputs", [])[index]
+            == "high"
         ),
         name_fn=lambda index, label: f"Input {index + 1:02} - {label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.link.input.{index}",
@@ -98,7 +99,8 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
             coord.data is not None
             and coord.data.device_links is not None
             and link_id is not None
-            and coord.data.device_links.get(link_id, {}).get("outputs", [])[index] == "closed"
+            and coord.data.device_links.get(link_id, {}).get("outputs", [])[index]
+            == "closed"
         ),
         name_fn=lambda index, label: f"Output {index + 1:02} - {label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.link.output.{index}",
@@ -109,7 +111,8 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
             coord.data is not None
             and coord.data.device_links is not None
             and link_id is not None
-            and coord.data.device_links.get(link_id, {}).get("relays", [])[index] == "latched"
+            and coord.data.device_links.get(link_id, {}).get("relays", [])[index]
+            == "latched"
         ),
         name_fn=lambda index, label: f"Relay {index + 1:02} - {label}",
         unique_id_fn=lambda device_id, index: f"{device_id}.link.relay.{index}",
@@ -171,8 +174,12 @@ SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
             and coord.data.device_fence is not None
             and coord.data.device_fence.get("gates", [])[index].get("alarmOrOpen") == 1
         ),
-        name_fn=lambda index, label: f"Fence Gate {index + 1:02} Alarm Or Open - {label}",
-        unique_id_fn=lambda device_id, index: f"{device_id}.fence_gate.alarmopen.{index}",
+        name_fn=lambda index, label: (
+            f"Fence Gate {index + 1:02} Alarm Or Open - {label}"
+        ),
+        unique_id_fn=lambda device_id, index: (
+            f"{device_id}.fence_gate.alarmopen.{index}"
+        ),
     ),
 }
 
@@ -298,7 +305,9 @@ def load_link_sensors(
             # Only create sensors for enabled inputs/outputs
             if io.get("enabled"):
                 if io.get("type") == "input":
-                    io_state = coordinator.data.device_links[link_id]["inputs"][io_index]
+                    io_state = coordinator.data.device_links[link_id]["inputs"][
+                        io_index
+                    ]
                     sensors.append(
                         OlarmBinarySensor(
                             coordinator,
@@ -313,7 +322,9 @@ def load_link_sensors(
                         )
                     )
                 elif io.get("type") == "output" and io.get("outputMode") == "latch":
-                    io_state = coordinator.data.device_links[link_id]["outputs"][io_index]
+                    io_state = coordinator.data.device_links[link_id]["outputs"][
+                        io_index
+                    ]
                     sensors.append(
                         OlarmBinarySensor(
                             coordinator,
@@ -333,7 +344,9 @@ def load_link_sensors(
         for relay_index, relay in enumerate(relay_items):
             # Only create sensors for enabled relays in latch mode
             if relay.get("enabled") and relay.get("relayMode") == "latch":
-                relay_state = coordinator.data.device_links[link_id]["relays"][relay_index]
+                relay_state = coordinator.data.device_links[link_id]["relays"][
+                    relay_index
+                ]
                 sensors.append(
                     OlarmBinarySensor(
                         coordinator,
@@ -391,6 +404,7 @@ def load_max_sensors(
                     )
                 )
 
+
 def load_fence_sensors(
     coordinator: OlarmDataUpdateCoordinator,
     config_entry: ConfigEntry,
@@ -404,7 +418,7 @@ def load_fence_sensors(
         sensors.append(
             OlarmBinarySensor(
                 coordinator,
-                SENSOR_DESCRIPTIONS['fence_zone_off'],
+                SENSOR_DESCRIPTIONS["fence_zone_off"],
                 device_id,
                 zone_index,
                 zone_state.get("off", 1),
@@ -416,7 +430,7 @@ def load_fence_sensors(
         sensors.append(
             OlarmBinarySensor(
                 coordinator,
-                SENSOR_DESCRIPTIONS['fence_zone_alarm'],
+                SENSOR_DESCRIPTIONS["fence_zone_alarm"],
                 device_id,
                 zone_index,
                 zone_state.get("alarm", 0),
@@ -428,7 +442,7 @@ def load_fence_sensors(
         sensors.append(
             OlarmBinarySensor(
                 coordinator,
-                SENSOR_DESCRIPTIONS['fence_zone_voltbad'],
+                SENSOR_DESCRIPTIONS["fence_zone_voltbad"],
                 device_id,
                 zone_index,
                 zone_state.get("voltBad", 0),
@@ -443,7 +457,7 @@ def load_fence_sensors(
         sensors.append(
             OlarmBinarySensor(
                 coordinator,
-                SENSOR_DESCRIPTIONS['fence_gate_alarmopen'],
+                SENSOR_DESCRIPTIONS["fence_gate_alarmopen"],
                 device_id,
                 gate_index,
                 gate_state.get("alarmOrOpen", 0),
@@ -451,6 +465,7 @@ def load_fence_sensors(
                 0,
             )
         )
+
 
 class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
     """Define an Olarm Binary Sensor."""
@@ -488,8 +503,17 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         # For link/max sensors, override the name to include link_name
         if self.entity_description.key in ("link_input", "link_output", "relay_output"):
             self._attr_name = f"{link_name} {self.entity_description.name_fn(sensor_index, sensor_label)}"
-        elif self.entity_description.key in ("max_input", "max_output", "fence_zone_off", "fence_zone_alarm", "fence_zone_voltbad", "fence_gate_alarmopen"):
-            self._attr_name = self.entity_description.name_fn(sensor_index, sensor_label)
+        elif self.entity_description.key in (
+            "max_input",
+            "max_output",
+            "fence_zone_off",
+            "fence_zone_alarm",
+            "fence_zone_voltbad",
+            "fence_gate_alarmopen",
+        ):
+            self._attr_name = self.entity_description.name_fn(
+                sensor_index, sensor_label
+            )
 
         self._attr_unique_id = self.entity_description.unique_id_fn(
             device_id, sensor_index
