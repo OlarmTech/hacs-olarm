@@ -38,6 +38,7 @@ class OlarmDeviceData:
     device_profile: dict[str, Any] = field(default_factory=dict)
     device_profile_links: dict[str, Any] = field(default_factory=dict)
     device_profile_io: dict[str, Any] = field(default_factory=dict)
+    device_zone_in_alarms: dict[int, dict[str, Any]] = field(default_factory=dict)
 
 
 class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
@@ -170,6 +171,19 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         if "deviceIO" in payload:
             self.data.device_io = payload["deviceIO"]
             updated = True
+
+        if "deviceEvents" in payload:
+            for event in payload["deviceEvents"]:
+                if (
+                    event.get("eventAction") == "zone_alarm"
+                    and event.get("eventArea", 0) > 0
+                ):
+                    area: int = event["eventArea"]
+                    self.data.device_zone_in_alarms[area] = {
+                        "zone": event.get("eventNum"),
+                        "time": event.get("eventTime"),
+                    }
+                    updated = True
 
         if updated:
             self.async_set_updated_data(self.data)

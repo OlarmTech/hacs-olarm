@@ -170,9 +170,21 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
+        attrs: dict[str, Any] = {}
+
         if self._attr_alarm_state == AlarmControlPanelState.ARMED_CUSTOM_BYPASS:
-            return {"armed_custom_bypass_profile": self.area_state}
-        return {"armed_custom_bypass_profile": None}
+            attrs["armed_custom_bypass_profile"] = self.area_state
+        else:
+            attrs["armed_custom_bypass_profile"] = None
+
+        # check if area has zone in alarms
+        zone_data = self.coordinator.data.device_zone_in_alarms.get(
+            self.area_index + 1, {}
+        )
+        attrs["zone_in_alarm"] = zone_data.get("zone")
+        attrs["zone_in_alarm_time"] = zone_data.get("time")
+
+        return attrs
 
     @callback
     def _handle_coordinator_update(self) -> None:
