@@ -1,3 +1,4 @@
+
 """Support for Olarm alarm control panels.
 
 An Olarm device connected to an alarm system can have upto 8 areas / partitions.
@@ -43,6 +44,7 @@ STATE_MAP: dict[str, AlarmControlPanelState] = {
     "stayarm3": AlarmControlPanelState.ARMED_HOME,
     "stayarm4": AlarmControlPanelState.ARMED_HOME,
     "entrydelay": AlarmControlPanelState.PENDING,
+    "countdown": AlarmControlPanelState.PENDING,
     "customarm1": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
     "customarm2": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
     "customarm3": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
@@ -240,7 +242,10 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send partial arm command using the configured profile number."""
         assert self.coordinator.config_entry
-        part_num: int = self.coordinator.config_entry.options.get(
-            "alarm_control_panel_custom_bypass_num", 1
+        options = self.coordinator.config_entry.options
+        area_key = f"custom_bypass_area_{self.area_index + 1}"
+        part_num: int = options.get(
+            area_key,
+            options.get("alarm_control_panel_custom_bypass_num", 1),
         )
         await self._async_send_command("device_area_part_arm", part_num=part_num)

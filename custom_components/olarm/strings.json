@@ -41,10 +41,24 @@
     "step": {
       "init": {
         "data": {
-          "alarm_control_panel_custom_bypass_num": "Custom bypass profile number"
+          "custom_bypass_area_1": "Area 1 bypass profile",
+          "custom_bypass_area_2": "Area 2 bypass profile",
+          "custom_bypass_area_3": "Area 3 bypass profile",
+          "custom_bypass_area_4": "Area 4 bypass profile",
+          "custom_bypass_area_5": "Area 5 bypass profile",
+          "custom_bypass_area_6": "Area 6 bypass profile",
+          "custom_bypass_area_7": "Area 7 bypass profile",
+          "custom_bypass_area_8": "Area 8 bypass profile"
         },
         "data_description": {
-          "alarm_control_panel_custom_bypass_num": "Profile number to use for Arm custom bypass (1 to 4)"
+          "custom_bypass_area_1": "Custom bypass profile number (1 to 4) for Area 1",
+          "custom_bypass_area_2": "Custom bypass profile number (1 to 4) for Area 2",
+          "custom_bypass_area_3": "Custom bypass profile number (1 to 4) for Area 3",
+          "custom_bypass_area_4": "Custom bypass profile number (1 to 4) for Area 4",
+          "custom_bypass_area_5": "Custom bypass profile number (1 to 4) for Area 5",
+          "custom_bypass_area_6": "Custom bypass profile number (1 to 4) for Area 6",
+          "custom_bypass_area_7": "Custom bypass profile number (1 to 4) for Area 7",
+          "custom_bypass_area_8": "Custom bypass profile number (1 to 4) for Area 8"
         },
         "title": "Alarm control panel options"
       }

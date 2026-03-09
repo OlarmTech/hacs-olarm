@@ -188,7 +188,7 @@ class OlarmOptionsFlow(OptionsFlow):
             return False
 
         area_actions = coordinator.data.device_alarm_type_actions.get("areas", [])
-        return "area-part-arm" in area_actions
+        return "area-part-arm-1" in area_actions
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -202,16 +202,22 @@ class OlarmOptionsFlow(OptionsFlow):
             await self.hass.config_entries.async_reload(self.config_entry.entry_id)
             return result
 
+        coordinator = self.config_entry.runtime_data.coordinator
+        areas = coordinator.data.device_state.get("areas", [])
+
+        legacy_default = self.config_entry.options.get(
+            "alarm_control_panel_custom_bypass_num", 1
+        )
+
+        schema_fields: dict = {}
+        for area_index in range(len(areas)):
+            key = f"custom_bypass_area_{area_index + 1}"
+            default = self.config_entry.options.get(key, legacy_default)
+            schema_fields[vol.Required(key, default=default)] = vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=4)
+            )
+
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        "alarm_control_panel_custom_bypass_num",
-                        default=self.config_entry.options.get(
-                            "alarm_control_panel_custom_bypass_num", 1
-                        ),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-                }
-            ),
+            data_schema=vol.Schema(schema_fields),
         )
