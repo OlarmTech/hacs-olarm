@@ -12,7 +12,8 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -35,6 +36,14 @@ class OlarmOauth2FlowHandler(
     _devices: list[dict[str, Any]] | None = None
     _device_id: str | None = None
     _oauth_data: dict[str, Any] | None = None
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OlarmOptionsFlow:
+        """Get options flow for this handler."""
+        return OlarmOptionsFlow()
 
     @property
     def logger(self) -> logging.Logger:
@@ -167,3 +176,48 @@ class CannotConnect(HomeAssistantError):
 
 class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class OlarmOptionsFlow(OptionsFlow):
+    """Handle options flow for Olarm."""
+
+    def _supports_custom_bypass(self) -> bool:
+        """Return True if custom bypass is supported by alarm type actions."""
+        coordinator = getattr(self.config_entry.runtime_data, "coordinator", None)
+        if not coordinator or not coordinator.data:
+            return False
+
+        area_actions = coordinator.data.device_alarm_type_actions.get("areas", [])
+        return "area-part-arm-1" in area_actions
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage integration options."""
+        if not self._supports_custom_bypass():
+            return self.async_abort(reason="no_configurable_options")
+
+        if user_input is not None:
+            result = self.async_create_entry(data=user_input)
+            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+            return result
+
+        coordinator = self.config_entry.runtime_data.coordinator
+        areas = coordinator.data.device_state.get("areas", [])
+
+        legacy_default = self.config_entry.options.get(
+            "alarm_control_panel_custom_bypass_num", 1
+        )
+
+        schema_fields: dict = {}
+        for area_index in range(len(areas)):
+            key = f"custom_bypass_area_{area_index + 1}"
+            default = self.config_entry.options.get(key, legacy_default)
+            schema_fields[vol.Required(key, default=default)] = vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=4)
+            )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(schema_fields),
+        )

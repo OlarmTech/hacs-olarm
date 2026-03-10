@@ -43,10 +43,23 @@ STATE_MAP: dict[str, AlarmControlPanelState] = {
     "stayarm3": AlarmControlPanelState.ARMED_HOME,
     "stayarm4": AlarmControlPanelState.ARMED_HOME,
     "entrydelay": AlarmControlPanelState.PENDING,
+    "countdown": AlarmControlPanelState.PENDING,
     "customarm1": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
     "customarm2": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
     "customarm3": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
     "customarm4": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+}
+
+# Mapping of Olarm area action strings to HA alarm feature flags.
+# "area-disarm" is intentionally excluded — disarm is always available in HA.
+ACTION_FEATURE_MAP: dict[str, AlarmControlPanelEntityFeature] = {
+    "area-arm": AlarmControlPanelEntityFeature.ARM_AWAY,
+    "area-stay": AlarmControlPanelEntityFeature.ARM_HOME,
+    "area-sleep": AlarmControlPanelEntityFeature.ARM_NIGHT,
+    "area-part-arm-1": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    "area-part-arm-2": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    "area-part-arm-3": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    "area-part-arm-4": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
 }
 
 
@@ -98,11 +111,6 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
     """Define an Olarm alarm control panel."""
 
     _attr_code_arm_required = False
-    _attr_supported_features = (
-        AlarmControlPanelEntityFeature.ARM_AWAY
-        | AlarmControlPanelEntityFeature.ARM_HOME
-        | AlarmControlPanelEntityFeature.ARM_NIGHT
-    )
 
     def __init__(
         self,
@@ -125,6 +133,16 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         # Set unique ID and name
         self._attr_unique_id = f"{device_id}.area.{area_index}"
         self._attr_name = f"Area {area_index + 1:02} - {area_label}"
+
+        # Build supported features from the alarm type actions reported by the API
+        area_actions: list[str] = coordinator.data.device_alarm_type_actions.get(
+            "areas", []
+        )
+        features = AlarmControlPanelEntityFeature(0)
+        for action in area_actions:
+            if feature := ACTION_FEATURE_MAP.get(action):
+                features |= feature
+        self._attr_supported_features = features
 
         # Initialize alarm state
         self._update_alarm_state()
@@ -153,9 +171,25 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes."""
+        attrs: dict[str, Any] = {}
+
         if self._attr_alarm_state == AlarmControlPanelState.ARMED_CUSTOM_BYPASS:
-            return {"armed_custom_bypass_profile": self.area_state}
-        return {"armed_custom_bypass_profile": None}
+            attrs["armed_custom_bypass_profile"] = self.area_state
+        else:
+            attrs["armed_custom_bypass_profile"] = None
+
+        # check if area has zone in alarms
+        if self.coordinator.data:
+            zone_data = self.coordinator.data.device_zone_in_alarms.get(
+                self.area_index + 1, {}
+            )
+            attrs["zone_in_alarm"] = zone_data.get("zone")
+            attrs["zone_in_alarm_time"] = zone_data.get("time")
+        else:
+            attrs["zone_in_alarm"] = None
+            attrs["zone_in_alarm_time"] = None
+
+        return attrs
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -179,12 +213,14 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
             )
             self.async_write_ha_state()
 
-    async def _async_send_command(self, command: str) -> None:
+    async def _async_send_command(
+        self, command: str, part_num: int | None = None
+    ) -> None:
         """Send command and provide UI feedback."""
         _LOGGER.debug("AlarmControlPanel command: %s - %s", self._attr_name, command)
 
         await self.coordinator.send_command(
-            command, self.device_id, self.area_index + 1
+            command, self.device_id, self.area_index + 1, part_num=part_num
         )
         # Set to pending state for UI feedback while waiting for MQTT state to come through
         self._attr_alarm_state = AlarmControlPanelState.PENDING
@@ -192,16 +228,30 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        await self._async_send_command("area_disarm")
+        await self._async_send_command("device_area_disarm")
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self._async_send_command("area_arm")
+        await self._async_send_command("device_area_arm")
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home (stay) command."""
-        await self._async_send_command("area_stay")
+        await self._async_send_command("device_area_stay")
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night (sleep) command."""
-        await self._async_send_command("area_sleep")
+        await self._async_send_command("device_area_sleep")
+
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
+        """Send partial arm command using the configured profile number."""
+        options = (
+            self.coordinator.config_entry.options
+            if self.coordinator.config_entry
+            else {}
+        )
+        area_key = f"custom_bypass_area_{self.area_index + 1}"
+        part_num: int = options.get(
+            area_key,
+            options.get("alarm_control_panel_custom_bypass_num", 1),
+        )
+        await self._async_send_command("device_area_part_arm", part_num=part_num)

@@ -29,6 +29,8 @@ class OlarmDeviceData:
     """Data structure to hold Olarm device information."""
 
     device_name: str
+    device_alarm_type: str = ""
+    device_alarm_type_actions: dict[str, Any] = field(default_factory=dict)
     device_state: dict[str, Any] = field(default_factory=dict)
     device_fence: dict[str, Any] = field(default_factory=dict)
     device_links: dict[str, Any] = field(default_factory=dict)
@@ -36,6 +38,7 @@ class OlarmDeviceData:
     device_profile: dict[str, Any] = field(default_factory=dict)
     device_profile_links: dict[str, Any] = field(default_factory=dict)
     device_profile_io: dict[str, Any] = field(default_factory=dict)
+    device_zone_in_alarms: dict[int, dict[str, Any]] = field(default_factory=dict)
 
 
 class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
@@ -123,6 +126,8 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         else:
             device_data = OlarmDeviceData(
                 device_name=device.get("deviceName") or "Olarm Device",
+                device_alarm_type=device.get("deviceAlarmType") or "",
+                device_alarm_type_actions=device.get("deviceAlarmTypeActions", {}),
                 device_state=device.get("deviceState", {}),
                 device_fence=device.get("deviceFence", {}),
                 device_links=device.get("deviceLinks", {}),
@@ -167,6 +172,19 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
             self.data.device_io = payload["deviceIO"]
             updated = True
 
+        if "deviceEvents" in payload:
+            for event in payload["deviceEvents"]:
+                if (
+                    event.get("eventAction") == "zone_alarm"
+                    and event.get("eventArea", 0) > 0
+                ):
+                    area: int = event["eventArea"]
+                    self.data.device_zone_in_alarms[area] = {
+                        "zone": event.get("eventNum"),
+                        "time": event.get("eventTime"),
+                    }
+                    updated = True
+
         if updated:
             self.async_set_updated_data(self.data)
 
@@ -174,15 +192,16 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         self,
         command: str,
         device_id: str,
-        num: int,
+        num: int = 0,
         link_id: str | None = None,
-    ) -> None:
+        part_num: int | None = None,
+    ) -> dict[str, Any]:
         """Send a command to the Olarm API."""
         # Ensure token is valid before sending command
         await self.async_ensure_token_valid()
 
         # Construct the client method name from command
-        client_method_name = f"send_device_{command}"
+        client_method_name = f"send_{command}"
         client_fn = getattr(self._olarm_connect_client, client_method_name, None)
 
         if client_fn is None:
@@ -190,8 +209,14 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
 
         try:
             if link_id is not None:
-                await client_fn(device_id, link_id, num)
+                result = await client_fn(device_id, link_id, num)
+            elif part_num is not None:
+                result = await client_fn(device_id, num, part_num)
+            elif num != 0:
+                result = await client_fn(device_id, num)
             else:
-                await client_fn(device_id, num)
+                result = await client_fn(device_id)
         except OlarmFlowClientApiError as err:
             raise HomeAssistantError(f"Command '{command}' failed: {err}") from err
+
+        return result or {}

@@ -12,6 +12,7 @@ import logging
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -27,7 +28,8 @@ class OlarmButtonEntityDescription(ButtonEntityDescription):
     """Describes an Olarm button entity."""
 
     press_fn: Callable[
-        [OlarmDataUpdateCoordinator, str, int, str | None], Coroutine[Any, Any, None]
+        [OlarmDataUpdateCoordinator, str, int, str | None],
+        Coroutine[Any, Any, dict[str, Any]],
     ]
     name_fn: Callable[[int, str, str | None], str]
     unique_id_fn: Callable[[str, int, str | None], str]
@@ -38,7 +40,7 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
     "zone_bypass": OlarmButtonEntityDescription(
         key="zone_bypass",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "zone_bypass", device_id, index, link_id
+            "device_zone_bypass", device_id, index, link_id
         ),
         name_fn=lambda index, label, _: f"Zone {index + 1:03} Bypass - {label}",
         unique_id_fn=lambda device_id, index, _: f"{device_id}.zone_bypass.{index}",
@@ -46,7 +48,7 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
     "zone_unbypass": OlarmButtonEntityDescription(
         key="zone_unbypass",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "zone_unbypass", device_id, index, link_id
+            "device_zone_unbypass", device_id, index, link_id
         ),
         name_fn=lambda index, label, _: f"Zone {index + 1:03} Unbypass - {label}",
         unique_id_fn=lambda device_id, index, _: f"{device_id}.zone_unbypass.{index}",
@@ -54,7 +56,7 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
     "pgm_open": OlarmButtonEntityDescription(
         key="pgm_open",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "pgm_open", device_id, index, link_id
+            "device_pgm_open", device_id, index, link_id
         ),
         name_fn=lambda index, label, _: f"PGM {index + 1:02} Open - {label}",
         unique_id_fn=lambda device_id, index, _: f"{device_id}.pgm_open.{index}",
@@ -62,7 +64,7 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
     "pgm_close": OlarmButtonEntityDescription(
         key="pgm_close",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "pgm_close", device_id, index, link_id
+            "device_pgm_close", device_id, index, link_id
         ),
         name_fn=lambda index, label, _: f"PGM {index + 1:02} Close - {label}",
         unique_id_fn=lambda device_id, index, _: f"{device_id}.pgm_close.{index}",
@@ -70,7 +72,7 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
     "pgm_pulse": OlarmButtonEntityDescription(
         key="pgm_pulse",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "pgm_pulse", device_id, index, link_id
+            "device_pgm_pulse", device_id, index, link_id
         ),
         name_fn=lambda index, label, _: f"PGM {index + 1:02} Pulse - {label}",
         unique_id_fn=lambda device_id, index, _: f"{device_id}.pgm_pulse.{index}",
@@ -78,7 +80,7 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
     "ukey": OlarmButtonEntityDescription(
         key="ukey",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "ukey_activate", device_id, index, link_id
+            "device_ukey_activate", device_id, index, link_id
         ),
         name_fn=lambda index, label, _: f"Utility Key {index + 1:02} - {label}",
         unique_id_fn=lambda device_id, index, _: f"{device_id}.ukey.{index}",
@@ -86,79 +88,79 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
     "link_output_open": OlarmButtonEntityDescription(
         key="link_output_open",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "link_output_open", device_id, index, link_id
+            "device_link_output_open", device_id, index, link_id
         ),
-        name_fn=lambda index,
-        label,
-        link_name: f"{link_name} Output {index + 1:02} Open - {label}",
-        unique_id_fn=lambda device_id,
-        index,
-        link_id: f"{device_id}_{link_id}.link_output_open.{index}",
+        name_fn=lambda index, label, link_name: (
+            f"{link_name} Output {index + 1:02} Open - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, link_id: (
+            f"{device_id}_{link_id}.link_output_open.{index}"
+        ),
     ),
     "link_output_close": OlarmButtonEntityDescription(
         key="link_output_close",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "link_output_close", device_id, index, link_id
+            "device_link_output_close", device_id, index, link_id
         ),
-        name_fn=lambda index,
-        label,
-        link_name: f"{link_name} Output {index + 1:02} Close - {label}",
-        unique_id_fn=lambda device_id,
-        index,
-        link_id: f"{device_id}_{link_id}.link_output_close.{index}",
+        name_fn=lambda index, label, link_name: (
+            f"{link_name} Output {index + 1:02} Close - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, link_id: (
+            f"{device_id}_{link_id}.link_output_close.{index}"
+        ),
     ),
     "link_output_pulse": OlarmButtonEntityDescription(
         key="link_output_pulse",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "link_output_pulse", device_id, index, link_id
+            "device_link_output_pulse", device_id, index, link_id
         ),
-        name_fn=lambda index,
-        label,
-        link_name: f"{link_name} Output {index + 1:02} Pulse - {label}",
-        unique_id_fn=lambda device_id,
-        index,
-        link_id: f"{device_id}_{link_id}.link_output_pulse.{index}",
+        name_fn=lambda index, label, link_name: (
+            f"{link_name} Output {index + 1:02} Pulse - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, link_id: (
+            f"{device_id}_{link_id}.link_output_pulse.{index}"
+        ),
     ),
     "link_relay_unlatch": OlarmButtonEntityDescription(
         key="link_relay_unlatch",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "link_relay_unlatch", device_id, index, link_id
+            "device_link_relay_unlatch", device_id, index, link_id
         ),
-        name_fn=lambda index,
-        label,
-        link_name: f"{link_name} Relay {index + 1:02} Unlatch - {label}",
-        unique_id_fn=lambda device_id,
-        index,
-        link_id: f"{device_id}_{link_id}.link_relay_unlatch.{index}",
+        name_fn=lambda index, label, link_name: (
+            f"{link_name} Relay {index + 1:02} Unlatch - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, link_id: (
+            f"{device_id}_{link_id}.link_relay_unlatch.{index}"
+        ),
     ),
     "link_relay_latch": OlarmButtonEntityDescription(
         key="link_relay_latch",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "link_relay_latch", device_id, index, link_id
+            "device_link_relay_latch", device_id, index, link_id
         ),
-        name_fn=lambda index,
-        label,
-        link_name: f"{link_name} Relay {index + 1:02} Latch - {label}",
-        unique_id_fn=lambda device_id,
-        index,
-        link_id: f"{device_id}_{link_id}.link_relay_latch.{index}",
+        name_fn=lambda index, label, link_name: (
+            f"{link_name} Relay {index + 1:02} Latch - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, link_id: (
+            f"{device_id}_{link_id}.link_relay_latch.{index}"
+        ),
     ),
     "link_relay_pulse": OlarmButtonEntityDescription(
         key="link_relay_pulse",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "link_relay_pulse", device_id, index, link_id
+            "device_link_relay_pulse", device_id, index, link_id
         ),
-        name_fn=lambda index,
-        label,
-        link_name: f"{link_name} Relay {index + 1:02} Pulse - {label}",
-        unique_id_fn=lambda device_id,
-        index,
-        link_id: f"{device_id}_{link_id}.link_relay_pulse.{index}",
+        name_fn=lambda index, label, link_name: (
+            f"{link_name} Relay {index + 1:02} Pulse - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, link_id: (
+            f"{device_id}_{link_id}.link_relay_pulse.{index}"
+        ),
     ),
     "max_output_open": OlarmButtonEntityDescription(
         key="max_output_open",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "max_output_open", device_id, index, link_id
+            "device_max_output_open", device_id, index, link_id
         ),
         name_fn=lambda index, label, _: f"MAX Output {index + 1:02} Open - {label}",
         unique_id_fn=lambda device_id, index, _: f"{device_id}.max_output_open.{index}",
@@ -166,22 +168,30 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
     "max_output_close": OlarmButtonEntityDescription(
         key="max_output_close",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "max_output_close", device_id, index, link_id
+            "device_max_output_close", device_id, index, link_id
         ),
         name_fn=lambda index, label, _: f"MAX Output {index + 1:02} Close - {label}",
-        unique_id_fn=lambda device_id,
-        index,
-        _: f"{device_id}.max_output_close.{index}",
+        unique_id_fn=lambda device_id, index, _: (
+            f"{device_id}.max_output_close.{index}"
+        ),
     ),
     "max_output_pulse": OlarmButtonEntityDescription(
         key="max_output_pulse",
         press_fn=lambda coord, device_id, index, link_id: coord.send_command(
-            "max_output_pulse", device_id, index, link_id
+            "device_max_output_pulse", device_id, index, link_id
         ),
         name_fn=lambda index, label, _: f"MAX Output {index + 1:02} Pulse - {label}",
-        unique_id_fn=lambda device_id,
-        index,
-        _: f"{device_id}.max_output_pulse.{index}",
+        unique_id_fn=lambda device_id, index, _: (
+            f"{device_id}.max_output_pulse.{index}"
+        ),
+    ),
+    "user_panic": OlarmButtonEntityDescription(
+        key="user_panic",
+        press_fn=lambda coord, device_id, index, link_id: coord.send_command(
+            "user_panic", device_id
+        ),
+        name_fn=lambda index, label, link_name: "User Panic",
+        unique_id_fn=lambda device_id, index, link_id: f"{device_id}.user_panic",
     ),
 }
 
@@ -205,6 +215,7 @@ async def async_setup_entry(
     load_link_output_buttons(coordinator, config_entry, buttons)
     load_link_relay_buttons(coordinator, config_entry, buttons)
     load_max_output_buttons(coordinator, config_entry, buttons)
+    load_user_panic_button(coordinator, config_entry, buttons)
 
     async_add_entities(buttons)
 
@@ -486,6 +497,26 @@ def load_max_output_buttons(
                 )
 
 
+def load_user_panic_button(
+    coordinator: OlarmDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    buttons: list[OlarmButton],
+) -> None:
+    """Load user panic button."""
+
+    device_id = config_entry.data["device_id"]
+
+    buttons.append(
+        OlarmButton(
+            coordinator,
+            BUTTON_DESCRIPTIONS["user_panic"],
+            device_id,
+            0,
+            "User Panic",
+        )
+    )
+
+
 class OlarmButton(OlarmEntity, ButtonEntity):
     """Define an Olarm Button."""
 
@@ -535,6 +566,14 @@ class OlarmButton(OlarmEntity, ButtonEntity):
             "Button pressed: %s [%s]", self._attr_name, self.entity_description.key
         )
 
-        await self.entity_description.press_fn(
+        result = await self.entity_description.press_fn(
             self.coordinator, self.device_id, self.button_index + 1, self.link_id
         )
+
+        if self.entity_description.key == "user_panic" and result:
+            message = result.get("actionMsg", "Panic button failed")
+            async_create(
+                self.hass,
+                message,
+                title="Olarm user panic",
+            )
