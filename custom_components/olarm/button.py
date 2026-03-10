@@ -570,7 +570,7 @@ class OlarmButton(OlarmEntity, ButtonEntity):
         )
 
         if self.entity_description.key == "user_panic" and result:
-            message = result.get("message", "Panic command sent")
+            message = result.get("actionMsg", "Panic button failed")
             async_create(
                 self.hass,
                 message,
