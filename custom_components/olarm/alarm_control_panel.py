@@ -1,4 +1,3 @@
-
 """Support for Olarm alarm control panels.
 
 An Olarm device connected to an alarm system can have upto 8 areas / partitions.
@@ -180,11 +179,15 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
             attrs["armed_custom_bypass_profile"] = None
 
         # check if area has zone in alarms
-        zone_data = self.coordinator.data.device_zone_in_alarms.get(
-            self.area_index + 1, {}
-        )
-        attrs["zone_in_alarm"] = zone_data.get("zone")
-        attrs["zone_in_alarm_time"] = zone_data.get("time")
+        if self.coordinator.data:
+            zone_data = self.coordinator.data.device_zone_in_alarms.get(
+                self.area_index + 1, {}
+            )
+            attrs["zone_in_alarm"] = zone_data.get("zone")
+            attrs["zone_in_alarm_time"] = zone_data.get("time")
+        else:
+            attrs["zone_in_alarm"] = None
+            attrs["zone_in_alarm_time"] = None
 
         return attrs
 
@@ -241,8 +244,7 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send partial arm command using the configured profile number."""
-        assert self.coordinator.config_entry
-        options = self.coordinator.config_entry.options
+        options = self.coordinator.config_entry.options if self.coordinator.config_entry else {}
         area_key = f"custom_bypass_area_{self.area_index + 1}"
         part_num: int = options.get(
             area_key,

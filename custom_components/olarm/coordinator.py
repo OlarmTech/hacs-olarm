@@ -212,7 +212,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
                 result = await client_fn(device_id, link_id, num)
             elif part_num is not None:
                 result = await client_fn(device_id, num, part_num)
-            elif num:
+            elif num != 0:
                 result = await client_fn(device_id, num)
             else:
                 result = await client_fn(device_id)
