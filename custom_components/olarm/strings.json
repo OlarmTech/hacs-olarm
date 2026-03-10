@@ -34,6 +34,28 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "ac_power": {
+        "name": "AC Power"
+      },
+      "ac_power_fence": {
+        "name": "AC Power"
+      },
+      "zone": {
+        "name": "Zone {zone_number} {zone_label}"
+      },
+      "zone_bypass": {
+        "name": "Zone {zone_number} Bypass {zone_label}"
+      }
+    }
+  },
+  "issues": {
+    "mqtt_disconnected": {
+      "description": "The MQTT connection to the Olarm service has been lost: {reason}\n\nThe integration will automatically attempt to reconnect in the background. If this issue persists, check your internet connection and verify the Olarm service is operational.\n\nThis issue will clear automatically when the connection is restored.",
+      "title": "MQTT connection to Olarm service lost"
+    }
+  },
   "options": {
     "abort": {
       "no_configurable_options": "This device has no configurable options"
@@ -62,28 +84,6 @@
         },
         "title": "Alarm control panel options"
       }
-    }
-  },
-  "entity": {
-    "binary_sensor": {
-      "ac_power": {
-        "name": "AC Power"
-      },
-      "ac_power_fence": {
-        "name": "AC Power"
-      },
-      "zone": {
-        "name": "Zone {zone_number} {zone_label}"
-      },
-      "zone_bypass": {
-        "name": "Zone {zone_number} Bypass {zone_label}"
-      }
-    }
-  },
-  "issues": {
-    "mqtt_disconnected": {
-      "description": "The MQTT connection to the Olarm service has been lost: {reason}\n\nThe integration will automatically attempt to reconnect in the background. If this issue persists, check your internet connection and verify the Olarm service is operational.\n\nThis issue will clear automatically when the connection is restored.",
-      "title": "MQTT connection to Olarm service lost"
     }
   }
 }

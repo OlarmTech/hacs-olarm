@@ -28,7 +28,8 @@ class OlarmButtonEntityDescription(ButtonEntityDescription):
     """Describes an Olarm button entity."""
 
     press_fn: Callable[
-        [OlarmDataUpdateCoordinator, str, int, str | None], Coroutine[Any, Any, None]
+        [OlarmDataUpdateCoordinator, str, int, str | None],
+        Coroutine[Any, Any, dict[str, Any]],
     ]
     name_fn: Callable[[int, str, str | None], str]
     unique_id_fn: Callable[[str, int, str | None], str]

@@ -244,7 +244,11 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
 
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send partial arm command using the configured profile number."""
-        options = self.coordinator.config_entry.options if self.coordinator.config_entry else {}
+        options = (
+            self.coordinator.config_entry.options
+            if self.coordinator.config_entry
+            else {}
+        )
         area_key = f"custom_bypass_area_{self.area_index + 1}"
         part_num: int = options.get(
             area_key,
