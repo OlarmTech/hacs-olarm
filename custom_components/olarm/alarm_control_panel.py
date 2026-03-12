@@ -238,4 +238,3 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night (sleep) command."""
         await self._async_send_command("device_area_sleep")
-

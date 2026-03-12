@@ -198,48 +198,32 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
         press_fn=lambda coord, device_id, area_num, _link_id: coord.send_command(
             "device_area_part_arm", device_id, area_num, part_num=1
         ),
-        name_fn=lambda index, label, _: (
-            f"Area {index + 1:02} Partial Arm 1 - {label}"
-        ),
-        unique_id_fn=lambda device_id, index, _: (
-            f"{device_id}.area_part_arm_1.{index}"
-        ),
+        name_fn=lambda index, label, _: f"Area {index + 1:02} Partial Arm 1 - {label}",
+        unique_id_fn=lambda device_id, index, _: f"{device_id}.area_part_arm_1.{index}",
     ),
     "area-part-arm-2": OlarmButtonEntityDescription(
         key="area_part_arm_2",
         press_fn=lambda coord, device_id, area_num, _link_id: coord.send_command(
             "device_area_part_arm", device_id, area_num, part_num=2
         ),
-        name_fn=lambda index, label, _: (
-            f"Area {index + 1:02} Partial Arm 2 - {label}"
-        ),
-        unique_id_fn=lambda device_id, index, _: (
-            f"{device_id}.area_part_arm_2.{index}"
-        ),
+        name_fn=lambda index, label, _: f"Area {index + 1:02} Partial Arm 2 - {label}",
+        unique_id_fn=lambda device_id, index, _: f"{device_id}.area_part_arm_2.{index}",
     ),
     "area-part-arm-3": OlarmButtonEntityDescription(
         key="area_part_arm_3",
         press_fn=lambda coord, device_id, area_num, _link_id: coord.send_command(
             "device_area_part_arm", device_id, area_num, part_num=3
         ),
-        name_fn=lambda index, label, _: (
-            f"Area {index + 1:02} Partial Arm 3 - {label}"
-        ),
-        unique_id_fn=lambda device_id, index, _: (
-            f"{device_id}.area_part_arm_3.{index}"
-        ),
+        name_fn=lambda index, label, _: f"Area {index + 1:02} Partial Arm 3 - {label}",
+        unique_id_fn=lambda device_id, index, _: f"{device_id}.area_part_arm_3.{index}",
     ),
     "area-part-arm-4": OlarmButtonEntityDescription(
         key="area_part_arm_4",
         press_fn=lambda coord, device_id, area_num, _link_id: coord.send_command(
             "device_area_part_arm", device_id, area_num, part_num=4
         ),
-        name_fn=lambda index, label, _: (
-            f"Area {index + 1:02} Partial Arm 4 - {label}"
-        ),
-        unique_id_fn=lambda device_id, index, _: (
-            f"{device_id}.area_part_arm_4.{index}"
-        ),
+        name_fn=lambda index, label, _: f"Area {index + 1:02} Partial Arm 4 - {label}",
+        unique_id_fn=lambda device_id, index, _: f"{device_id}.area_part_arm_4.{index}",
     ),
 }
 
