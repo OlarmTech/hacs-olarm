@@ -193,6 +193,54 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
         name_fn=lambda index, label, link_name: "User Panic",
         unique_id_fn=lambda device_id, index, link_id: f"{device_id}.user_panic",
     ),
+    "area-part-arm-1": OlarmButtonEntityDescription(
+        key="area_part_arm_1",
+        press_fn=lambda coord, device_id, area_num, _link_id: coord.send_command(
+            "device_area_part_arm", device_id, area_num, part_num=1
+        ),
+        name_fn=lambda index, label, _: (
+            f"Area {index + 1:02} Partial Arm 1 - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, _: (
+            f"{device_id}.area_part_arm_1.{index}"
+        ),
+    ),
+    "area-part-arm-2": OlarmButtonEntityDescription(
+        key="area_part_arm_2",
+        press_fn=lambda coord, device_id, area_num, _link_id: coord.send_command(
+            "device_area_part_arm", device_id, area_num, part_num=2
+        ),
+        name_fn=lambda index, label, _: (
+            f"Area {index + 1:02} Partial Arm 2 - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, _: (
+            f"{device_id}.area_part_arm_2.{index}"
+        ),
+    ),
+    "area-part-arm-3": OlarmButtonEntityDescription(
+        key="area_part_arm_3",
+        press_fn=lambda coord, device_id, area_num, _link_id: coord.send_command(
+            "device_area_part_arm", device_id, area_num, part_num=3
+        ),
+        name_fn=lambda index, label, _: (
+            f"Area {index + 1:02} Partial Arm 3 - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, _: (
+            f"{device_id}.area_part_arm_3.{index}"
+        ),
+    ),
+    "area-part-arm-4": OlarmButtonEntityDescription(
+        key="area_part_arm_4",
+        press_fn=lambda coord, device_id, area_num, _link_id: coord.send_command(
+            "device_area_part_arm", device_id, area_num, part_num=4
+        ),
+        name_fn=lambda index, label, _: (
+            f"Area {index + 1:02} Partial Arm 4 - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, _: (
+            f"{device_id}.area_part_arm_4.{index}"
+        ),
+    ),
 }
 
 
@@ -216,6 +264,7 @@ async def async_setup_entry(
     load_link_relay_buttons(coordinator, config_entry, buttons)
     load_max_output_buttons(coordinator, config_entry, buttons)
     load_user_panic_button(coordinator, config_entry, buttons)
+    load_area_part_arm_buttons(coordinator, config_entry, buttons)
 
     async_add_entities(buttons)
 
@@ -515,6 +564,42 @@ def load_user_panic_button(
             "User Panic",
         )
     )
+
+
+def load_area_part_arm_buttons(
+    coordinator: OlarmDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    buttons: list[OlarmButton],
+) -> None:
+    """Load partial arm buttons for each area based on alarmTypeActions."""
+    device_id = config_entry.data["device_id"]
+    area_actions: list[str] = coordinator.data.device_alarm_type_actions.get(
+        "areas", []
+    )
+    areas = coordinator.data.device_state.get("areas", [])
+    areas_labels = coordinator.data.device_profile.get("areasLabels", [])
+
+    for action in area_actions:
+        if not action.startswith("area-part-arm-"):
+            continue
+
+        description = BUTTON_DESCRIPTIONS[action]
+
+        for area_index in range(len(areas)):
+            area_label = (
+                areas_labels[area_index]
+                if area_index < len(areas_labels)
+                else f"Area {area_index + 1}"
+            )
+            buttons.append(
+                OlarmButton(
+                    coordinator,
+                    description,
+                    device_id,
+                    area_index,
+                    area_label,
+                )
+            )
 
 
 class OlarmButton(OlarmEntity, ButtonEntity):
