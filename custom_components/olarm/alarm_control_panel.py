@@ -52,14 +52,13 @@ STATE_MAP: dict[str, AlarmControlPanelState] = {
 
 # Mapping of Olarm area action strings to HA alarm feature flags.
 # "area-disarm" is intentionally excluded — disarm is always available in HA.
+# Partial arm actions (area-part-arm-1 etc.) are exposed as button entities instead,
+# since a single alarm panel entity can only have one custom bypass action but alarm
+# systems may support up to 4 partial arming profiles per area.
 ACTION_FEATURE_MAP: dict[str, AlarmControlPanelEntityFeature] = {
     "area-arm": AlarmControlPanelEntityFeature.ARM_AWAY,
     "area-stay": AlarmControlPanelEntityFeature.ARM_HOME,
     "area-sleep": AlarmControlPanelEntityFeature.ARM_NIGHT,
-    "area-part-arm-1": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-    "area-part-arm-2": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-    "area-part-arm-3": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
-    "area-part-arm-4": AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
 }
 
 
@@ -213,14 +212,12 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
             )
             self.async_write_ha_state()
 
-    async def _async_send_command(
-        self, command: str, part_num: int | None = None
-    ) -> None:
+    async def _async_send_command(self, command: str) -> None:
         """Send command and provide UI feedback."""
         _LOGGER.debug("AlarmControlPanel command: %s - %s", self._attr_name, command)
 
         await self.coordinator.send_command(
-            command, self.device_id, self.area_index + 1, part_num=part_num
+            command, self.device_id, self.area_index + 1
         )
         # Set to pending state for UI feedback while waiting for MQTT state to come through
         self._attr_alarm_state = AlarmControlPanelState.PENDING
@@ -241,17 +238,3 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night (sleep) command."""
         await self._async_send_command("device_area_sleep")
-
-    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
-        """Send partial arm command using the configured profile number."""
-        options = (
-            self.coordinator.config_entry.options
-            if self.coordinator.config_entry
-            else {}
-        )
-        area_key = f"custom_bypass_area_{self.area_index + 1}"
-        part_num: int = options.get(
-            area_key,
-            options.get("alarm_control_panel_custom_bypass_num", 1),
-        )
-        await self._async_send_command("device_area_part_arm", part_num=part_num)
