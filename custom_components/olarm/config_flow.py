@@ -59,12 +59,10 @@ class OlarmOauth2FlowHandler(
             DOMAIN,
             ClientCredential(OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, name="Olarm"),
         )
-        return await super().async_step_user(user_input)
+        return await super().async_step_user()
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
-        errors: dict[str, str] = {}
-
         # Extract oauth tokens to connect to use to connect to Olarm services
         self._oauth_data = data
         self._access_token = data["token"]["access_token"]
@@ -81,9 +79,7 @@ class OlarmOauth2FlowHandler(
             # Handle if user has no devices
             return self.async_abort(reason="no_devices_found")
         except OlarmFlowClientApiError:
-            # Otherwise, assume it's an auth-related error
-            errors["base"] = "invalid_auth"
-            return self.async_show_form(step_id="user", errors=errors)
+            return self.async_abort(reason="invalid_auth")
 
         _LOGGER.debug(api_result)
         self._devices = api_result.get("data")
