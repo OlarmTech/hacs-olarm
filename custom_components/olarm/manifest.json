@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://github.com/olarmtech/hacs-olarm",
+  "homeassistant": "2025.1.0",
   "iot_class": "cloud_push",
   "issue_tracker": "https://github.com/olarmtech/hacs-olarm/issues",
   "quality_scale": "bronze",
