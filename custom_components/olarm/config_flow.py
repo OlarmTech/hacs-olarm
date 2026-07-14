@@ -5,7 +5,16 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from olarmflowclient import DevicesNotFound, OlarmFlowClient, OlarmFlowClientApiError
+from olarmflowclient import (
+    DevicesNotFound,
+    OlarmFlowClient,
+    OlarmFlowClientApiError,
+    OlarmFlowClientConnectionError,
+    RateLimited,
+    ServiceUnavailable,
+    TokenExpired,
+    Unauthorized,
+)
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -19,6 +28,16 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from .const import DOMAIN, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
 
 _LOGGER = logging.getLogger(__name__)
+
+# Maps client exceptions to config flow abort reasons 
+_API_ERROR_ABORT_REASONS: tuple[tuple[type[OlarmFlowClientApiError], str], ...] = (
+    (TokenExpired, "token_expired"),
+    (RateLimited, "rate_limited"),
+    (Unauthorized, "unauthorized"),
+    (OlarmFlowClientConnectionError, "cannot_connect"),
+    (ServiceUnavailable, "service_unavailable"),
+    (OlarmFlowClientApiError, "api_error"),
+)
 
 
 class OlarmOauth2FlowHandler(
@@ -78,8 +97,17 @@ class OlarmOauth2FlowHandler(
         except DevicesNotFound:
             # Handle if user has no devices
             return self.async_abort(reason="no_devices_found")
-        except OlarmFlowClientApiError:
-            return self.async_abort(reason="invalid_auth")
+        except OlarmFlowClientApiError as err:
+            reason = next(
+                abort_reason
+                for exc_type, abort_reason in _API_ERROR_ABORT_REASONS
+                if isinstance(err, exc_type)
+            )
+            _LOGGER.error("Error fetching Olarm devices during setup: %s", err)
+            return self.async_abort(
+                reason=reason,
+                description_placeholders={"error_detail": str(err)},
+            )
 
         _LOGGER.debug(api_result)
         self._devices = api_result.get("data")
