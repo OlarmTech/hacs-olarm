@@ -122,7 +122,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         try:
             device = await self._olarm_connect_client.get_device(self.device_id)
         except OlarmFlowClientApiError as e:
-            raise UpdateFailed("Failed to reach Olarm API") from e
+            raise UpdateFailed(f"Failed to reach Olarm API: {e}") from e
         else:
             device_data = OlarmDeviceData(
                 device_name=device.get("deviceName") or "Olarm Device",
