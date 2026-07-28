@@ -179,9 +179,11 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
                     and event.get("eventArea", 0) > 0
                 ):
                     area: int = event["eventArea"]
+                    # Olarm reports eventTime in epoch milliseconds; HA expects seconds
+                    event_time = event.get("eventTime")
                     self.data.device_zone_in_alarms[area] = {
                         "zone": event.get("eventNum"),
-                        "time": event.get("eventTime"),
+                        "time": event_time / 1000 if event_time is not None else None,
                     }
                     updated = True
 
