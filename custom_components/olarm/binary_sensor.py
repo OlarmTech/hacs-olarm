@@ -9,11 +9,10 @@ additional binary sensors are added for this. Alarm systems also monitor AC powe
 as they have battery backup so this is added as a binary sensor as well.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -39,7 +38,6 @@ class OlarmBinarySensorEntityDescription(BinarySensorEntityDescription):
     unique_id_fn: Callable[[str, int], str]
 
 
-# Descriptions for the different Olarm binary sensor types
 SENSOR_DESCRIPTIONS: dict[str, OlarmBinarySensorEntityDescription] = {
     "zone": OlarmBinarySensorEntityDescription(
         key="zone",
@@ -486,13 +484,10 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
     ) -> None:
         """Init the class."""
 
-        # Initialize base entity
         super().__init__(coordinator, device_id)
 
-        # store description
         self.entity_description = description
 
-        # set attributes via description
         self._attr_translation_key = self.entity_description.key
         if self.entity_description.key in ("zone", "zone_bypass"):
             self._attr_translation_placeholders = {
@@ -525,7 +520,6 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
             sensor_state,
         )
 
-        # set the device class if provided
         if sensor_class in CLASS_MAP:
             self._attr_device_class = CLASS_MAP[sensor_class]
 
@@ -538,12 +532,12 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
             link_id  # only used for olarm LINKs to track which LINK as can have upto 8
         )
 
-        # initialize state using description value_fn
         self._attr_is_on = self.entity_description.value_fn(
             self.coordinator, self.sensor_index, self.link_id
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if not self.coordinator.data:
