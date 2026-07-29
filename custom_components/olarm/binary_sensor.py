@@ -9,6 +9,9 @@ additional binary sensors are added for this. Alarm systems also monitor AC powe
 as they have battery backup so this is added as a binary sensor as well.
 """
 
+# Required for Python < 3.14 (PEP 649): keeps forward references in annotations
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
