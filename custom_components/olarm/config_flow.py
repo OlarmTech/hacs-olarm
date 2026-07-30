@@ -1,11 +1,18 @@
 """Config flow for olarm integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
-from olarmflowclient import DevicesNotFound, OlarmFlowClient, OlarmFlowClientApiError
+from olarmflowclient import (
+    DevicesNotFound,
+    OlarmFlowClient,
+    OlarmFlowClientApiError,
+    OlarmFlowClientConnectionError,
+    RateLimited,
+    ServiceUnavailable,
+    TokenExpired,
+    Unauthorized,
+)
 import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
@@ -19,6 +26,16 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from .const import DOMAIN, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
 
 _LOGGER = logging.getLogger(__name__)
+
+# Maps client exceptions to config flow abort reasons 
+_API_ERROR_ABORT_REASONS: tuple[tuple[type[OlarmFlowClientApiError], str], ...] = (
+    (TokenExpired, "token_expired"),
+    (RateLimited, "rate_limited"),
+    (Unauthorized, "unauthorized"),
+    (OlarmFlowClientConnectionError, "cannot_connect"),
+    (ServiceUnavailable, "service_unavailable"),
+    (OlarmFlowClientApiError, "api_error"),
+)
 
 
 class OlarmOauth2FlowHandler(
@@ -37,18 +54,18 @@ class OlarmOauth2FlowHandler(
     _oauth_data: dict[str, Any] | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_params(self) -> dict[str, str]:
-        """Extra parameters for authorize. PKCE is handled automatically."""
-        return {
-            "scope": "email",
-            "client_id": OAUTH2_CLIENT_ID,
-        }
+    @override
+    def extra_authorize_data(self) -> dict[str, str]:
+        """Extra data appended to the authorize URL. PKCE is handled automatically."""
+        return {"scope": "email"}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -59,13 +76,11 @@ class OlarmOauth2FlowHandler(
             DOMAIN,
             ClientCredential(OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, name="Olarm"),
         )
-        return await super().async_step_user(user_input)
+        return await super().async_step_user()
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
-        errors: dict[str, str] = {}
-
-        # Extract oauth tokens to connect to use to connect to Olarm services
         self._oauth_data = data
         self._access_token = data["token"]["access_token"]
         self._refresh_token = data["token"]["refresh_token"]
@@ -78,12 +93,18 @@ class OlarmOauth2FlowHandler(
         try:
             api_result = await olarm_connect_client.get_devices()
         except DevicesNotFound:
-            # Handle if user has no devices
             return self.async_abort(reason="no_devices_found")
-        except OlarmFlowClientApiError:
-            # Otherwise, assume it's an auth-related error
-            errors["base"] = "invalid_auth"
-            return self.async_show_form(step_id="user", errors=errors)
+        except OlarmFlowClientApiError as err:
+            reason = next(
+                abort_reason
+                for exc_type, abort_reason in _API_ERROR_ABORT_REASONS
+                if isinstance(err, exc_type)
+            )
+            _LOGGER.error("Error fetching Olarm devices during setup: %s", err)
+            return self.async_abort(
+                reason=reason,
+                description_placeholders={"error_detail": str(err)},
+            )
 
         _LOGGER.debug(api_result)
         self._devices = api_result.get("data")
@@ -102,14 +123,11 @@ class OlarmOauth2FlowHandler(
             _LOGGER.debug(user_input)
             self._device_id = user_input["select_device"]
 
-            # abort if oauth data is not available
             if self._oauth_data is None:
                 return self.async_abort(reason="oauth_data_missing")
 
-            # Find next available client_id_suffix
             client_id_suffix = self._get_next_client_id_suffix()
 
-            # load device details into config
             data = {
                 "user_id": self._user_id,
                 "device_id": self._device_id,
@@ -118,18 +136,15 @@ class OlarmOauth2FlowHandler(
                 "token": self._oauth_data["token"],
             }
 
-            # Create a unique ID using the device identifier and abort if it already exists
             unique_id = self._device_id
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(title="Olarm Integration", data=data)
 
-        # abort if no devices are found
         if self._devices is None:
             return self.async_abort(reason="no_devices_found")
 
-        # setup device selection dropdown and sort by device name
         device_options: dict[str, str] = {
             device["deviceId"]: f"{device['deviceName']} - {device['deviceSerial']}"
             for device in self._devices

@@ -1,10 +1,8 @@
 """The coordinator for the olarm integration to handle API and MQTT connections."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from olarmflowclient import OlarmFlowClient, OlarmFlowClientApiError
@@ -58,17 +56,10 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         """Create a new instance of the OlarmCoordinator."""
 
         self._oauth_session = oauth_session
-
-        # user props
         self._user_id = entry.data["user_id"]
-
-        # device props
         self.device_id = entry.data["device_id"]
-
-        # olarm connect client
         self._olarm_connect_client = olarm_client
 
-        # Initialize DataUpdateCoordinator with no update interval (one-time setup only)
         super().__init__(
             hass,
             _LOGGER,
@@ -82,7 +73,6 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
 
         Checks if access token has expired and if not uses refresh token to fetch new.
         """
-        # Check if token needs refresh
         token_valid: bool = self._oauth_session.valid_token
         if not token_valid:
             _LOGGER.debug("Access token expired, refreshing")
@@ -117,12 +107,13 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         """Public method to ensure token is valid before sending commands."""
         await self._ensure_valid_token()
 
+    @override
     async def _async_update_data(self) -> OlarmDeviceData:
         """Fetch initial device information from the Olarm HTTP API."""
         try:
             device = await self._olarm_connect_client.get_device(self.device_id)
         except OlarmFlowClientApiError as e:
-            raise UpdateFailed("Failed to reach Olarm API") from e
+            raise UpdateFailed(f"Failed to reach Olarm API: {e}") from e
         else:
             device_data = OlarmDeviceData(
                 device_name=device.get("deviceName") or "Olarm Device",
@@ -179,9 +170,11 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
                     and event.get("eventArea", 0) > 0
                 ):
                     area: int = event["eventArea"]
+                    # Olarm reports eventTime in epoch milliseconds; HA expects seconds
+                    event_time = event.get("eventTime")
                     self.data.device_zone_in_alarms[area] = {
                         "zone": event.get("eventNum"),
-                        "time": event.get("eventTime"),
+                        "time": event_time / 1000 if event_time is not None else None,
                     }
                     updated = True
 

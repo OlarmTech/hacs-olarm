@@ -196,18 +196,17 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         if not self.coordinator.data:
             return
 
-        # Store the previous state to check if it changed
-        previous_state = self._attr_alarm_state
+        # check if area_state has changed
+        previous_area_state = self.area_state
 
-        # Update alarm state from coordinator data
         self._update_alarm_state()
 
-        # Only schedule state update if the state actually changed
-        if self._attr_alarm_state != previous_state:
+        if self.area_state != previous_area_state:
             _LOGGER.debug(
-                "AlarmControlPanel %s state changed: %s -> %s",
+                "AlarmControlPanel %s state changed: %s -> %s (%s)",
                 self._attr_name,
-                previous_state,
+                previous_area_state,
+                self.area_state,
                 self._attr_alarm_state,
             )
             self.async_write_ha_state()

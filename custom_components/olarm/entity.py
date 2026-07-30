@@ -1,7 +1,5 @@
 """Base entity class for Olarm entities."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,7 +25,6 @@ class OlarmEntity(CoordinatorEntity[OlarmDataUpdateCoordinator]):
         super().__init__(coordinator)
         self.device_id = device_id
 
-        # Set device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=coordinator.data.device_name,
