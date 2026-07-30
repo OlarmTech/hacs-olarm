@@ -722,17 +722,11 @@ class OlarmButton(OlarmEntity, ButtonEntity):
             button_index, button_label, link_name
         )
 
-        _LOGGER.debug(
-            "Button: init %s -> %s",
-            self._attr_name,
-            self.entity_description.key,
-        )
+        _LOGGER.debug("Button: initialized (name=%s, key=%s)", self._attr_name, self.entity_description.key)
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        _LOGGER.debug(
-            "Button pressed: %s [%s]", self._attr_name, self.entity_description.key
-        )
+        _LOGGER.debug("Button: pressed (name=%s, key=%s)", self._attr_name, self.entity_description.key)
 
         result = await self.entity_description.press_fn(
             self.coordinator, self.device_id, self.button_index + 1, self.link_id

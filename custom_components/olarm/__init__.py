@@ -52,9 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         raise ConfigEntryNotReady from err
     except ClientError as err:
         raise ConfigEntryNotReady from err
-    _LOGGER.debug(
-        "OAuth2 session ok, access_token expires at -> %s", session.token["expires_at"]
-    )
+    _LOGGER.debug("OAuth2: session valid (expires_at=%s)", session.token["expires_at"])
 
     olarm_client = OlarmFlowClient(
         session.token["access_token"], session.token["expires_at"]
@@ -64,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
 
     await coordinator.async_config_entry_first_refresh()
 
-    mqtt_client = OlarmFlowClientMQTT(hass, entry, session, olarm_client, coordinator)
+    mqtt_client = OlarmFlowClientMQTT(hass, entry, olarm_client, coordinator)
     try:
         await mqtt_client.init_mqtt()
     except (MqttTimeoutError, MqttConnectError) as err:
@@ -81,7 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         try:
             await mqtt_client.async_stop()
         except Exception:
-            _LOGGER.exception("Error stopping MQTT client after failed setup")
+            _LOGGER.exception("MQTT: error stopping client after failed setup")
         raise
 
     return True
@@ -95,6 +93,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bo
     try:
         await mqtt_client.async_stop()
     except Exception:
-        _LOGGER.exception("Error stopping MQTT client during unload")
+        _LOGGER.exception("MQTT: error stopping client during unload")
 
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
