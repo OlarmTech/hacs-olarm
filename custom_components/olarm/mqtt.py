@@ -53,10 +53,7 @@ class OlarmFlowClientMQTT:
         status: Literal["connecting", "connected", "disconnected", "reconnecting"],
         info: dict[str, Any],
     ) -> None:
-        """Handle MQTT connection status changes.
-
-        Runs on the HA event loop since ``start_mqtt_async`` is given ``event_loop``.
-        """
+        """Handle MQTT connection status changes."""
 
         if status == "connecting":
             _LOGGER.debug("MQTT: connecting")
@@ -90,8 +87,11 @@ class OlarmFlowClientMQTT:
 
         _LOGGER.debug("MQTT: starting connection")
 
-        # Set up the connection status callback before starting MQTT
+        # Register before starting so the first connection includes the subscription
         self._olarm_flow_client.set_mqtt_status_callback(self._mqtt_status_callback)
+        self._olarm_flow_client.subscribe_to_device(
+            self.device_id, self.mqtt_message_callback
+        )
 
         try:
             await self._coordinator.async_ensure_token_valid()
@@ -99,12 +99,7 @@ class OlarmFlowClientMQTT:
             await self._olarm_flow_client.start_mqtt_async(
                 user_id=self._user_id,
                 client_id_suffix=self.client_id_suffix,
-                event_loop=self._hass.loop,
                 timeout=10.0,
-            )
-
-            self._olarm_flow_client.subscribe_to_device(
-                self.device_id, self.mqtt_message_callback
             )
             _LOGGER.debug(
                 "MQTT: connected and subscribed (device_id=%s)", self.device_id
@@ -118,21 +113,11 @@ class OlarmFlowClientMQTT:
         """Handle incoming MQTT messages from the Olarm device."""
 
         _LOGGER.debug("MQTT: message received (topic=%s): %s", topic, payload)
-        self._hass.loop.call_soon_threadsafe(
-            self._coordinator.async_update_from_mqtt, payload
-        )
+        self._coordinator.async_update_from_mqtt(payload)
 
     async def async_stop(self) -> None:
         """Stop the MQTT client and clean up connections."""
-        if self._olarm_flow_client:
-            try:
-                # stop_mqtt is synchronous, so run it in an executor
-                await self._hass.async_add_executor_job(
-                    self._olarm_flow_client.stop_mqtt
-                )
-            except Exception as e:  # noqa: BLE001
-                _LOGGER.warning("MQTT: error stopping client: %s", e)
-            finally:
-                ir.async_delete_issue(
-                    self._hass, DOMAIN, f"mqtt_disconnected_{self.device_id}"
-                )
+        self._olarm_flow_client.stop_mqtt()
+        ir.async_delete_issue(
+            self._hass, DOMAIN, f"mqtt_disconnected_{self.device_id}"
+        )
