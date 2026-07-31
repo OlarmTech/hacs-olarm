@@ -61,6 +61,11 @@ Before installing the integration:
 - Maximum of 5 Olarm devices per integration instance
 - Only one Olarm user account per Home Assistant instance
 
+## Roadmap
+
+- Add an OAuth2 reauthentication flow to the config flow (see `quality_scale.yaml`)
+- Once reauth exists, trigger it when the refresh token becomes invalid mid-session (currently the MQTT wrapper only logs the failure and keeps retrying)
+
 ## Issues / Feature Requests
 
 Please log issues and feature requests in Github issues 👆
