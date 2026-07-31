@@ -106,8 +106,8 @@ class OlarmOauth2FlowHandler(
                 description_placeholders={"error_detail": str(err)},
             )
 
-        _LOGGER.debug("API: devices response: %s", api_result)
         self._devices = api_result.get("data")
+        _LOGGER.debug("API: fetched %d device(s)", len(self._devices or []))
         self._user_id = api_result.get("userId")
         return await self.async_step_device()
 

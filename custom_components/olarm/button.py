@@ -291,6 +291,7 @@ async def async_setup_entry(
     load_area_part_arm_buttons(coordinator, config_entry, buttons)
     load_area_custom_arm_buttons(coordinator, config_entry, buttons)
 
+    _LOGGER.debug("Button: adding %d entities", len(buttons))
     async_add_entities(buttons)
 
 
@@ -721,8 +722,6 @@ class OlarmButton(OlarmEntity, ButtonEntity):
         self._attr_name = self.entity_description.name_fn(
             button_index, button_label, link_name
         )
-
-        _LOGGER.debug("Button: initialized (name=%s, key=%s)", self._attr_name, self.entity_description.key)
 
     async def async_press(self) -> None:
         """Handle the button press."""

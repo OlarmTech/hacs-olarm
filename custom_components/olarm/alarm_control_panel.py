@@ -76,6 +76,7 @@ async def async_setup_entry(
     panels: list[OlarmAlarmControlPanel] = []
     load_area_panels(coordinator, config_entry, panels)
 
+    _LOGGER.debug("AlarmControlPanel: adding %d entities", len(panels))
     async_add_entities(panels)
 
 
@@ -145,8 +146,6 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
 
         # Initialize alarm state
         self._update_alarm_state()
-
-        _LOGGER.debug("AlarmControlPanel: initialized (name=%s, state=%s)", self._attr_name, self._attr_alarm_state)
 
     def _update_alarm_state(self) -> None:
         """Update the alarm state from coordinator data."""

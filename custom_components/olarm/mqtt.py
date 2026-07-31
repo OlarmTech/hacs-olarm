@@ -86,8 +86,6 @@ class OlarmFlowClientMQTT:
     async def init_mqtt(self) -> None:
         """Initialize and connect to the Olarm MQTT service."""
 
-        _LOGGER.debug("MQTT: starting connection")
-
         # Register before starting so the first connection includes the subscription
         self._olarm_flow_client.set_mqtt_status_callback(self._mqtt_status_callback)
         self._olarm_flow_client.subscribe_to_device(
@@ -104,7 +102,7 @@ class OlarmFlowClientMQTT:
                 tls_context=get_default_context(),
             )
             _LOGGER.debug(
-                "MQTT: connected and subscribed (device_id=%s)", self.device_id
+                "MQTT: subscribed to device updates (device_id=%s)", self.device_id
             )
 
         except (MqttTimeoutError, MqttConnectError) as e:

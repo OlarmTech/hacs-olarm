@@ -210,6 +210,7 @@ async def async_setup_entry(
     load_max_sensors(coordinator, config_entry, sensors)
     load_fence_sensors(coordinator, config_entry, sensors)
 
+    _LOGGER.debug("BinarySensor: adding %d entities", len(sensors))
     async_add_entities(sensors)
 
 
@@ -516,8 +517,6 @@ class OlarmBinarySensor(OlarmEntity, BinarySensorEntity):
         self._attr_unique_id = self.entity_description.unique_id_fn(
             device_id, sensor_index
         )
-
-        _LOGGER.debug("BinarySensor: initialized (key=%s, state=%s)", self.entity_description.key, sensor_state)
 
         if sensor_class in CLASS_MAP:
             self._attr_device_class = CLASS_MAP[sensor_class]
