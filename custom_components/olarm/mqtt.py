@@ -8,6 +8,7 @@ from olarmflowclient import MqttConnectError, MqttTimeoutError, OlarmFlowClient
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.util.ssl import get_default_context
 
 from .const import DOMAIN
 from .coordinator import OlarmDataUpdateCoordinator
@@ -100,6 +101,7 @@ class OlarmFlowClientMQTT:
                 user_id=self._user_id,
                 client_id_suffix=self.client_id_suffix,
                 timeout=10.0,
+                tls_context=get_default_context(),
             )
             _LOGGER.debug(
                 "MQTT: connected and subscribed (device_id=%s)", self.device_id
