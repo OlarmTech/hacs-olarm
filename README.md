@@ -120,7 +120,10 @@ The integration cannot see your device until this is done, and it must be done o
 
 ## Automation examples
 
-Entity IDs are generated from your own labels, so adjust these to match what appears in **Developer Tools → States**.
+> **The entity IDs below are placeholders.** Entity IDs are generated from the labels you
+> set in the Olarm app, so yours will differ. Find your real ones in
+> **Developer Tools → States**, filter by `olarm`, and substitute them in. Every ID here
+> is prefixed `example_` to make clear it will not work as written.
 
 ### Arm when everyone leaves
 
@@ -134,12 +137,12 @@ automation:
         for: "00:05:00"
     conditions:
       - condition: state
-        entity_id: alarm_control_panel.house
+        entity_id: alarm_control_panel.example_area
         state: "disarmed"
     actions:
       - action: alarm_control_panel.alarm_arm_away
         target:
-          entity_id: alarm_control_panel.house
+          entity_id: alarm_control_panel.example_area
 ```
 
 ### Flash the lights when the alarm triggers
@@ -149,7 +152,7 @@ automation:
   - alias: "Alarm triggered - visual alert"
     triggers:
       - trigger: state
-        entity_id: alarm_control_panel.house
+        entity_id: alarm_control_panel.example_area
         to: "triggered"
     actions:
       - action: light.turn_on
@@ -173,7 +176,7 @@ automation:
   - alias: "Mains power lost"
     triggers:
       - trigger: state
-        entity_id: binary_sensor.olarm_ac_power
+        entity_id: binary_sensor.example_ac_power
         to: "off"
         for: "00:02:00"
     actions:
@@ -191,7 +194,7 @@ script:
     sequence:
       - action: button.press
         target:
-          entity_id: button.pgm_01_pulse_gate
+          entity_id: button.example_pgm_01_pulse
 ```
 
 ### Bypass a faulty zone before arming
@@ -205,11 +208,11 @@ automation:
     actions:
       - action: button.press
         target:
-          entity_id: button.zone_014_bypass_garage_pir
+          entity_id: button.example_zone_014_bypass
       - delay: "00:00:05"
       - action: alarm_control_panel.alarm_arm_night
         target:
-          entity_id: alarm_control_panel.house
+          entity_id: alarm_control_panel.example_area
 ```
 
 ---
