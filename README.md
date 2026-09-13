@@ -2,11 +2,11 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
-Integration for [Olarm](https://www.olarm.com/) smart alarm communicators. Olarm connects traditional alarm panels — Paradox, DSC, Texecom, IDS, Honeywell Galaxy, Orisec and more — to Home Assistant, without replacing the panel on your wall.
+Home Assistant integration for [Olarm](https://www.olarm.com/) alarm communicators.
 
-Your areas become alarm control panel entities you can arm and disarm. Your zones become binary sensors you can automate against. PGMs, utility keys and I/O become buttons.
+Areas are exposed as alarm control panel entities, zones and system status as binary sensors, and PGMs, utility keys and I/O as buttons. Panels reported as supported by the device include Paradox, DSC, Texecom, IDS, Honeywell Galaxy and Orisec.
 
-**Cloud push** — state arrives over MQTT in real time, so there is no polling interval to tune.
+`iot_class` is `cloud_push` — state arrives over MQTT, so there is no polling interval to configure.
 
 ---
 
@@ -169,7 +169,7 @@ automation:
 
 ### Warn when mains power fails
 
-Useful anywhere loadshedding or outages are routine — the panel runs on battery backup, and this tells you the clock has started.
+Alarm panels run on battery backup when mains power fails. This fires once the AC power sensor has been off for two minutes.
 
 ```yaml
 automation:
