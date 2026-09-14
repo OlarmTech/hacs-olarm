@@ -4,12 +4,14 @@ Connect your Olarm smart alarm communicator to Home Assistant for real-time moni
 
 ## What is Olarm?
 
-[Olarm](https://www.olarm.com) transforms traditional alarm systems into connected, app-controlled security solutions. Works with major alarm panels including Paradox, DSC, Texecom, IDS, and Honeywell.
+[Olarm](https://www.olarm.com) transforms traditional alarm systems into connected, app-controlled security solutions. Works with major alarm panels including Paradox MG5050 and EVO192, DSC PowerSeries and PowerSeries NEO, IDS 805, 806 and X-Series, Texecom Premier and Premier Elite, Honeywell Galaxy G2, G3 and Dimension, and Orisec CP and ZP. Full model list is in the README.
 
 ## Features
 
+- **Alarm Control Panels**: One per area — arm away, home and night, and disarm
+- **Binary Sensors**: Zones, zone bypass, AC power, LINK/MAX I/O and electric fence
+- **Buttons**: PGM outputs, utility keys, zone bypass, LINK and MAX outputs, panic, partial and custom arm profiles
 - **Real-time Updates**: MQTT-based push notifications for instant status changes
-- **Binary Sensors**: Monitor zones, system status, and LINK/MAX modules
 - **OAuth2 Authentication**: Secure cloud connection
 - **Easy Setup**: Configure through Home Assistant UI
 
@@ -32,6 +34,6 @@ Connect your Olarm smart alarm communicator to Home Assistant for real-time moni
 3. Go to Settings > Devices & Services
 4. Click "+ Add Integration" and search for "Olarm"
 5. Complete OAuth2 authentication
-6. Your devices will be automatically discovered
+6. Select the device you want to add — each config entry covers one Olarm device
 
 For more information, visit [Olarm Website](https://www.olarm.com)

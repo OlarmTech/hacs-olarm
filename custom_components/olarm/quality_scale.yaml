@@ -42,12 +42,12 @@ rules:
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
-  docs-data-update: todo
-  docs-examples: todo
+  docs-data-update: done
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
