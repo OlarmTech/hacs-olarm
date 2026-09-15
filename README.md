@@ -21,67 +21,20 @@ Panels: Paradox, DSC, IDS, Texecom, Honeywell Galaxy and Orisec — [full model 
 
 Panels supported by **Olarm MAX**. Olarm PRO, PRO 4G and GEN1 have their own panel compatibility — see the [Olarm knowledge base](https://help.olarm.com/portal/en/kb/alarm-panel-compatibilities).
 
-| Panel | Adapter board |
+| Brand | Supported panels |
 |---|---|
-| Paradox MG5050 | — |
-| Paradox MG5050+ | — |
-| Paradox SP6000 | — |
-| Paradox SP6000+ | — |
-| Paradox SP65 | — |
-| Paradox EVO192 | Required |
-| DSC PowerSeries PC1555 | — |
-| DSC PowerSeries PC1616 | — |
-| DSC PowerSeries PC832 | — |
-| DSC PowerSeries PC864 | — |
-| DSC PowerSeries PC1808 | — |
-| DSC PowerSeries PC1832 | — |
-| DSC PowerSeries PC1864 | — |
-| DSC PowerSeries PC5005 | — |
-| DSC PowerSeries PC5010 | — |
-| DSC PowerSeries PC5015 | — |
-| DSC PowerSeries PC5020 | — |
-| DSC PowerSeries NEO HS2016 | Required |
-| DSC PowerSeries NEO HS2032 | Required |
-| DSC PowerSeries NEO HS2064 | Required |
-| DSC PowerSeries NEO HS2128 | Required |
-| IDS 805 | — |
-| IDS 806 | Required |
-| IDS X16 | Required |
-| IDS X64 | Required |
-| IDS X64 Serial | Required |
-| Texecom Premier 412 | — |
-| Texecom Premier 816 | — |
-| Texecom Premier 816 Plus | — |
-| Texecom Premier 832 | — |
-| Texecom Premier 168 \* | — |
-| Texecom Premier Elite 24 | — |
-| Texecom Premier Elite 48 | — |
-| Texecom Premier Elite 64 | — |
-| Texecom Premier Elite 64-W | — |
-| Texecom Premier Elite 64-W LIVE | — |
-| Texecom Premier Elite 88 | — |
-| Texecom Premier Elite 168 | — |
-| Honeywell Galaxy G2-12 | — |
-| Honeywell Galaxy G2-20 | — |
-| Honeywell Galaxy G2-44 | — |
-| Honeywell Galaxy G2-44+ | — |
-| Honeywell Galaxy Dimension GD48 | — |
-| Honeywell Galaxy Dimension GD96 | — |
-| Honeywell Galaxy Dimension GD264 | — |
-| Honeywell Galaxy Dimension GD520 | — |
-| Orisec CP-50 | Required |
-| Orisec CP-60 | Required |
-| Orisec CP-100 | Required |
-| Orisec ZP-10 | Required |
-| Orisec ZP-20 | Required |
-| Orisec ZP-40 | Required |
-| Orisec ZP-100 | Required |
+| **Paradox** | Paradox MG5050, MG5050+, SP6000, SP6000+, SP65, EVO192 † |
+| **DSC** | DSC PowerSeries PC1555, PC1616, PC832, PC864, PC1808, PC1832, PC1864, PC5005, PC5010, PC5015, PC5020<br>DSC PowerSeries NEO HS2016, HS2032, HS2064, HS2128 — all † |
+| **IDS** | IDS 805, 806 †, X16 †, X64 †, X64 Serial † |
+| **Texecom** | Texecom Premier 412, 816, 816 Plus, 832, 168 \*<br>Texecom Premier Elite 24, 48, 64, 64-W, 64-W LIVE, 88, 168 |
+| **Honeywell Galaxy** | Honeywell Galaxy G2-12, G2-20, G2-44, G2-44+<br>Honeywell Galaxy Dimension GD48, GD96, GD264, GD520 |
+| **Orisec** | Orisec CP-50, CP-60, CP-100, ZP-10, ZP-20, ZP-40, ZP-100 — all † |
 
-\* Texecom Premier 168 has limited app functionality.
+† Adapter board required, sold separately.  \* Limited app functionality.
 
 **Galaxy Dimension, G3 and the GD series are one family.** Our compatibility records list "G3 panels" alongside GD48/96/264/520 and give them one wiring and programming procedure, so the GD models above cover G3. We have no separate G3 model numbers.
 
-The Honeywell G2 and Dimension guides are both marked **BETA**, and both note that panels with a **single Com Port** may not be supported. Adapter boards are sold separately.
+The Honeywell G2 and Dimension guides are both marked **BETA**, and both note that panels with a **single Com Port** may not be supported.
 
 Wiring and programming for each panel is on the [Olarm MAX install guides](https://www.olarm.com/install-guides/olarm-max). Which entities appear depends on what your panel reports — see [Entities](#entities).
 
