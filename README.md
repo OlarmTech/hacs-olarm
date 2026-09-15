@@ -32,6 +32,8 @@ Panels supported by **Olarm MAX**. Olarm PRO, PRO 4G and GEN1 have their own pan
 
 † Adapter board required, sold separately.  \* Limited app functionality.
 
+**Honeywell Galaxy needs an Olarm with the RS serial option** — a model number containing **R**, such as Olarm MAX G W4EL**R** or Olarm MAX A W4EL**R**. A MAX G without the R will not work, so the generation is not what decides it. Check the model number on your device before you buy.
+
 **Galaxy Dimension, G3 and the GD series are one family.** Our compatibility records list "G3 panels" alongside GD48/96/264/520 and give them one wiring and programming procedure, so the GD models above cover G3. We have no separate G3 model numbers.
 
 The Honeywell G2 and Dimension guides are both marked **BETA**, and both note that panels with a **single Com Port** may not be supported.
