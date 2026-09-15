@@ -2,11 +2,13 @@
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
 
-Integration for [Olarm](https://www.olarm.com/) smart alarm communicators. Olarm transforms traditional alarm systems into connected, app-controlled security solutions, working with major alarm panels — Paradox, DSC, IDS, Texecom, Honeywell Galaxy and Orisec. See [Supported alarm panels](#supported-alarm-panels) for the model list.
+We maintain this integration ourselves and ship it through HACS. Connect an [Olarm](https://www.olarm.com/) communicator to your alarm panel and your areas, zones and outputs appear in Home Assistant as entities you can automate against.
 
-Your areas become alarm control panels you can arm and disarm. Zones, power and I/O become binary sensors. PGMs, utility keys, LINK outputs and MAX outputs become buttons. Everything updates over MQTT, so state changes arrive as they happen rather than on a poll.
+Your areas become alarm control panels you can arm and disarm. Zones, power and I/O become binary sensors. PGMs, utility keys, LINK outputs and MAX outputs become buttons. Everything arrives over MQTT as it happens, so there is no polling interval. Sign-in is OAuth2.
 
-## Supported Devices
+Panels: Paradox, DSC, IDS, Texecom, Honeywell Galaxy and Orisec — [full model list below](#supported-alarm-panels).
+
+## Supported devices
 
 - Olarm GEN1 – Paradox
 - Olarm GEN1 – Universal
@@ -17,76 +19,24 @@ Your areas become alarm control panels you can arm and disarm. Zones, power and 
 
 ## Supported alarm panels
 
-Panels supported by **Olarm MAX**. Connect the panel to an Olarm MAX, enable API Access, and its areas, zones and outputs appear in Home Assistant through this integration.
+Panels supported by **Olarm MAX**. Olarm PRO, PRO 4G and GEN1 have their own panel compatibility — see the [Olarm knowledge base](https://help.olarm.com/portal/en/kb/alarm-panel-compatibilities).
 
-| Brand | Panel | Adapter board | Notes |
-|---|---|---|---|
-| Paradox | Paradox MG5050 | — |  |
-| Paradox | Paradox MG5050+ | — |  |
-| Paradox | Paradox SP6000 | — |  |
-| Paradox | Paradox SP6000+ | — |  |
-| Paradox | Paradox SP65 | — |  |
-| Paradox | Paradox EVO192 | Required |  |
-| DSC | DSC PowerSeries PC1555 | — |  |
-| DSC | DSC PowerSeries PC1616 | — |  |
-| DSC | DSC PowerSeries PC832 | — |  |
-| DSC | DSC PowerSeries PC864 | — |  |
-| DSC | DSC PowerSeries PC1808 | — |  |
-| DSC | DSC PowerSeries PC1832 | — |  |
-| DSC | DSC PowerSeries PC1864 | — |  |
-| DSC | DSC PowerSeries PC5005 | — |  |
-| DSC | DSC PowerSeries PC5010 | — |  |
-| DSC | DSC PowerSeries PC5015 | — |  |
-| DSC | DSC PowerSeries PC5020 | — |  |
-| DSC | DSC PowerSeries NEO HS2016 | Required |  |
-| DSC | DSC PowerSeries NEO HS2032 | Required |  |
-| DSC | DSC PowerSeries NEO HS2064 | Required |  |
-| DSC | DSC PowerSeries NEO HS2128 | Required |  |
-| IDS | IDS 805 | — |  |
-| IDS | IDS 806 | Required |  |
-| IDS | IDS X16 | Required |  |
-| IDS | IDS X64 | Required |  |
-| IDS | IDS X64 Serial | Required |  |
-| Texecom | Texecom Premier 412 | — |  |
-| Texecom | Texecom Premier 816 | — |  |
-| Texecom | Texecom Premier 816 Plus | — |  |
-| Texecom | Texecom Premier 832 | — |  |
-| Texecom | Texecom Premier 168 | — | Limited app functionality |
-| Texecom | Texecom Premier Elite 24 | — |  |
-| Texecom | Texecom Premier Elite 48 | — |  |
-| Texecom | Texecom Premier Elite 64 | — |  |
-| Texecom | Texecom Premier Elite 64-W | — |  |
-| Texecom | Texecom Premier Elite 64-W LIVE | — |  |
-| Texecom | Texecom Premier Elite 88 | — |  |
-| Texecom | Texecom Premier Elite 168 | — |  |
-| Honeywell Galaxy | Honeywell Galaxy G2-12 | — |  |
-| Honeywell Galaxy | Honeywell Galaxy G2-20 | — |  |
-| Honeywell Galaxy | Honeywell Galaxy G2-44 | — |  |
-| Honeywell Galaxy | Honeywell Galaxy G2-44+ | — |  |
-| Honeywell Galaxy | Honeywell Galaxy G3 | — | G3 series |
-| Honeywell Galaxy | Honeywell Galaxy Dimension GD48 | — |  |
-| Honeywell Galaxy | Honeywell Galaxy Dimension GD96 | — |  |
-| Honeywell Galaxy | Honeywell Galaxy Dimension GD264 | — |  |
-| Honeywell Galaxy | Honeywell Galaxy Dimension GD520 | — |  |
-| Orisec | Orisec CP-50 | Required |  |
-| Orisec | Orisec CP-60 | Required |  |
-| Orisec | Orisec CP-100 | Required |  |
-| Orisec | Orisec ZP-10 | Required |  |
-| Orisec | Orisec ZP-20 | Required |  |
-| Orisec | Orisec ZP-40 | Required |  |
-| Orisec | Orisec ZP-100 | Required |  |
+| Brand | Supported panels |
+|---|---|
+| **Paradox** | Paradox MG5050, MG5050+, SP6000, SP6000+, SP65, EVO192 † |
+| **DSC** | DSC PowerSeries PC1555, PC1616, PC832, PC864, PC1808, PC1832, PC1864, PC5005, PC5010, PC5015, PC5020<br>DSC PowerSeries NEO HS2016, HS2032, HS2064, HS2128 — all † |
+| **IDS** | IDS 805, 806 †, X16 †, X64 †, X64 Serial † |
+| **Texecom** | Texecom Premier 412, 816, 816 Plus, 832, 168 \*<br>Texecom Premier Elite 24, 48, 64, 64-W, 64-W LIVE, 88, 168 |
+| **Honeywell Galaxy** | Honeywell Galaxy G2-12, G2-20, G2-44, G2-44+<br>Honeywell Galaxy Dimension GD48, GD96, GD264, GD520 |
+| **Orisec** | Orisec CP-50, CP-60, CP-100, ZP-10, ZP-20, ZP-40, ZP-100 — all † |
 
-Adapter boards are sold separately. Wiring and programming for each panel is on the [Olarm MAX install guides](https://www.olarm.com/install-guides/olarm-max). Which entities appear depends on what your panel reports — see [Entities](#entities).
+† Adapter board required, sold separately.  \* Limited app functionality.
 
-## Features
+**Galaxy Dimension, G3 and the GD series are one family.** Our compatibility records list "G3 panels" alongside GD48/96/264/520 and give them one wiring and programming procedure, so the GD models above cover G3. We have no separate G3 model numbers.
 
-- Alarm control panel per area — arm away, arm home (stay), arm night (sleep), disarm
-- Binary sensors for zones, zone bypass, AC power, LINK and MAX I/O, and electric fence
-- Buttons for PGM outputs, utility keys, zone bypass, LINK outputs and relays, MAX outputs, panic, and partial/custom arm profiles
-- Real-time monitoring via MQTT
-- LINK module support for expanded I/O capabilities
-- MAX module support
-- OAuth2 authentication
+The Honeywell G2 and Dimension guides are both marked **BETA**, and both note that panels with a **single Com Port** may not be supported.
+
+Wiring and programming for each panel is on the [Olarm MAX install guides](https://www.olarm.com/install-guides/olarm-max). Which entities appear depends on what your panel reports — see [Entities](#entities).
 
 ## Entities
 
@@ -179,7 +129,7 @@ Find yours under **Settings → Devices & Services → Olarm → entities**, or 
 - **API Access enabled** in the Olarm app
   - This needs to be enabled on the **primary user** if a secondary user is used for the integration.
 
-### Important: Enable API Access
+### Important: enable API Access
 
 Before installing the integration:
 
@@ -187,7 +137,7 @@ Before installing the integration:
 2. Go to **Profile** > **Device List** > **[Select Device]** > **Developer Settings**
 3. Enable **API Access**
 
-## Installation via HACS
+## Installing via HACS
 
 1. Make sure you have [HACS](https://hacs.xyz/) installed
 2. In Home Assistant, go to HACS > Integrations
@@ -328,7 +278,7 @@ automation:
           message: "Electric fence voltage is out of range."
 ```
 
-## Known Limitations
+## Known limitations
 
 - Maximum of 5 Olarm devices per integration instance
 - Only one Olarm user account per Home Assistant instance
@@ -358,13 +308,13 @@ logger:
     custom_components.olarm: debug
 ```
 
-## Issues / Feature Requests
+## Issues and feature requests
 
-Please log issues and feature requests in Github issues 👆
+Log issues and feature requests in [GitHub Issues](https://github.com/olarmtech/hacs-olarm/issues).
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request. Please see CONTRIBUTING.md 
+Contributions are welcome — open an issue or submit a pull request. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
