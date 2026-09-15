@@ -310,7 +310,12 @@ logger:
     custom_components.olarm: debug
 ```
 
-## Issues and feature requests
+## Roadmap
+
+- Add an OAuth2 reauthentication flow to the config flow (see `quality_scale.yaml`)
+- Once reauth exists, trigger it when the refresh token becomes invalid mid-session (currently the MQTT wrapper only logs the failure and keeps retrying)
+
+## Issues / Feature Requests
 
 Log issues and feature requests in [GitHub Issues](https://github.com/olarmtech/hacs-olarm/issues).
 

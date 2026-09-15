@@ -86,7 +86,7 @@ class OlarmOauth2FlowHandler(
         self._refresh_token = data["token"]["refresh_token"]
         self._expires_at = data["token"]["expires_at"]
 
-        _LOGGER.debug("OAuth2 tokens fetched successfully, fetching devices")
+        _LOGGER.debug("OAuth2: tokens fetched, fetching devices")
 
         olarm_connect_client = OlarmFlowClient(self._access_token, self._expires_at)
 
@@ -100,14 +100,14 @@ class OlarmOauth2FlowHandler(
                 for exc_type, abort_reason in _API_ERROR_ABORT_REASONS
                 if isinstance(err, exc_type)
             )
-            _LOGGER.error("Error fetching Olarm devices during setup: %s", err)
+            _LOGGER.debug("API: failed to fetch devices during setup: %s", err)
             return self.async_abort(
                 reason=reason,
                 description_placeholders={"error_detail": str(err)},
             )
 
-        _LOGGER.debug(api_result)
         self._devices = api_result.get("data")
+        _LOGGER.debug("API: fetched %d device(s)", len(self._devices or []))
         self._user_id = api_result.get("userId")
         return await self.async_step_device()
 
@@ -120,8 +120,8 @@ class OlarmOauth2FlowHandler(
         """
         errors: dict[str, str] = {}
         if user_input is not None:
-            _LOGGER.debug(user_input)
             self._device_id = user_input["select_device"]
+            _LOGGER.debug("Config: device selected (device_id=%s)", self._device_id)
 
             if self._oauth_data is None:
                 return self.async_abort(reason="oauth_data_missing")

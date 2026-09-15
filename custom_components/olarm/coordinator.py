@@ -75,32 +75,30 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         """
         token_valid: bool = self._oauth_session.valid_token
         if not token_valid:
-            _LOGGER.debug("Access token expired, refreshing")
+            _LOGGER.debug("OAuth2: access token expired, refreshing")
 
         try:
             await self._oauth_session.async_ensure_token_valid()
             new_token: str = self._oauth_session.token["access_token"]
             expires_at: float = self._oauth_session.token["expires_at"]
-            _LOGGER.debug("Access token expires at: %s ", expires_at)
+            _LOGGER.debug("OAuth2: access token valid (expires_at=%s)", expires_at)
 
             await self._olarm_connect_client.update_access_token(new_token, expires_at)
         except ClientResponseError as e:
-            _LOGGER.error("Failed to refresh OAuth2 token: %s", e)
-
-            # Check if this is an invalid_grant error (status 400) that indicates expired/invalid refresh token
+            # Status 400 (invalid_grant) indicates an expired/invalid refresh token
             if e.status == 400:
-                _LOGGER.error(
-                    "OAuth2 refresh token is invalid (status 400). Integration will remain in error state"
-                    "Please remove and re-add the integration to fix authentication"
+                _LOGGER.debug(
+                    "OAuth2: refresh token invalid (status=%s): %s", e.status, e
                 )
                 raise ConfigEntryError(
                     "OAuth2 refresh token is invalid. Please remove and re-add the integration."
                 ) from e
 
             # For other HTTP errors, treat as temporary and retry
+            _LOGGER.debug("OAuth2: token refresh failed (status=%s): %s", e.status, e)
             raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from e
         except Exception as e:
-            _LOGGER.error("Failed to refresh OAuth2 token: %s", e)
+            _LOGGER.debug("OAuth2: token refresh failed: %s", e)
             raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from e
 
     async def async_ensure_token_valid(self) -> None:
@@ -129,12 +127,9 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
             )
 
             _LOGGER.debug(
-                "Device -> %s",
-                {
-                    "device_name": device_data.device_name,
-                    "device_state": device_data.device_state,
-                    "device_fence": device_data.device_fence,
-                },
+                "API: fetched device (device_id=%s, name=%s)",
+                self.device_id,
+                device_data.device_name
             )
 
             return device_data

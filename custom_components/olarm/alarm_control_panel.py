@@ -76,6 +76,7 @@ async def async_setup_entry(
     panels: list[OlarmAlarmControlPanel] = []
     load_area_panels(coordinator, config_entry, panels)
 
+    _LOGGER.debug("AlarmControlPanel: adding %d entities", len(panels))
     async_add_entities(panels)
 
 
@@ -146,12 +147,6 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         # Initialize alarm state
         self._update_alarm_state()
 
-        _LOGGER.debug(
-            "AlarmControlPanel: init %s -> %s",
-            self._attr_name,
-            self._attr_alarm_state,
-        )
-
     def _update_alarm_state(self) -> None:
         """Update the alarm state from coordinator data."""
         if not self.coordinator.data:
@@ -202,18 +197,12 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         self._update_alarm_state()
 
         if self.area_state != previous_area_state:
-            _LOGGER.debug(
-                "AlarmControlPanel %s state changed: %s -> %s (%s)",
-                self._attr_name,
-                previous_area_state,
-                self.area_state,
-                self._attr_alarm_state,
-            )
+            _LOGGER.debug("AlarmControlPanel: state changed (name=%s, from=%s, to=%s, ha_state=%s)", self._attr_name, previous_area_state, self.area_state, self._attr_alarm_state)
             self.async_write_ha_state()
 
     async def _async_send_command(self, command: str) -> None:
         """Send command and provide UI feedback."""
-        _LOGGER.debug("AlarmControlPanel command: %s - %s", self._attr_name, command)
+        _LOGGER.debug("AlarmControlPanel: sending command (name=%s, command=%s)", self._attr_name, command)
 
         await self.coordinator.send_command(
             command, self.device_id, self.area_index + 1
