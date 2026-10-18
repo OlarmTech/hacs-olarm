@@ -189,6 +189,10 @@ CLASS_MAP: dict[int, BinarySensorDeviceClass] = {
     11: BinarySensorDeviceClass.WINDOW,
     20: BinarySensorDeviceClass.MOTION,
     21: BinarySensorDeviceClass.MOTION,
+    # Olarm zone types 50 (panic button) and 51 (panic zone) report "on" while the
+    # zone is in alarm, which is exactly what SAFETY expresses ("on means unsafe").
+    50: BinarySensorDeviceClass.SAFETY,
+    51: BinarySensorDeviceClass.SAFETY,
 }
 
 
