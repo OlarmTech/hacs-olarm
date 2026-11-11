@@ -1,7 +1,7 @@
 """Support for Olarm buttons.
 
 Buttons are used to control PGMs, zones (bypass/unbypass), utility keys,
-LINK outputs/relays, and MAX outputs.
+LINK outputs/relays, MAX outputs, and Olarm ONE HUB and node IOs.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.components.persistent_notification import async_create
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import OlarmDataUpdateCoordinator
@@ -267,6 +268,54 @@ BUTTON_DESCRIPTIONS: dict[str, OlarmButtonEntityDescription] = {
     ),
 }
 
+# Olarm ONE HUB and node IOs take the same four actions. The API does not report
+# an output mode for them, so every output gets all four.
+SYSTEM_IO_ACTIONS: dict[str, str] = {
+    "latch_on": "Latch On",
+    "latch_off": "Latch Off",
+    "toggle": "Toggle",
+    "pulse": "Pulse",
+}
+
+
+def _hub_io_description(action: str, action_name: str) -> OlarmButtonEntityDescription:
+    return OlarmButtonEntityDescription(
+        key=f"hub_io_{action}",
+        press_fn=lambda coord, device_id, index, _: coord.send_command(
+            f"device_hub_io_{action}", device_id, index
+        ),
+        name_fn=lambda index, label, _: f"HUB IO {index + 1:02} {action_name} - {label}",
+        unique_id_fn=lambda device_id, index, _: (
+            f"{device_id}.hub_io_{action}.{index}"
+        ),
+    )
+
+
+def _node_io_description(
+    action: str, action_name: str
+) -> OlarmButtonEntityDescription:
+    return OlarmButtonEntityDescription(
+        key=f"node_io_{action}",
+        press_fn=lambda coord, device_id, index, node_id: coord.send_command(
+            f"device_node_io_{action}", device_id, index, node_id
+        ),
+        name_fn=lambda index, label, node_name: (
+            f"{node_name} IO {index + 1:02} {action_name} - {label}"
+        ),
+        unique_id_fn=lambda device_id, index, node_id: (
+            f"{device_id}_{node_id}.node_io_{action}.{index}"
+        ),
+    )
+
+
+for _action, _action_name in SYSTEM_IO_ACTIONS.items():
+    BUTTON_DESCRIPTIONS[f"hub_io_{_action}"] = _hub_io_description(
+        _action, _action_name
+    )
+    BUTTON_DESCRIPTIONS[f"node_io_{_action}"] = _node_io_description(
+        _action, _action_name
+    )
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -287,6 +336,8 @@ async def async_setup_entry(
     load_link_output_buttons(coordinator, config_entry, buttons)
     load_link_relay_buttons(coordinator, config_entry, buttons)
     load_max_output_buttons(coordinator, config_entry, buttons)
+    load_hub_io_buttons(coordinator, config_entry, buttons)
+    load_node_io_buttons(coordinator, config_entry, buttons)
     load_user_panic_button(coordinator, config_entry, buttons)
     load_area_part_arm_buttons(coordinator, config_entry, buttons)
     load_area_custom_arm_buttons(coordinator, config_entry, buttons)
@@ -572,6 +623,60 @@ def load_max_output_buttons(
                 )
 
 
+def load_hub_io_buttons(
+    coordinator: OlarmDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    buttons: list[OlarmButton],
+) -> None:
+    """Load buttons for Olarm ONE HUB IOs configured as outputs."""
+    device_id = config_entry.data["device_id"]
+    device_profile_io = coordinator.data.device_profile_io or {}
+
+    for io_index, io in enumerate(device_profile_io.get("io") or []):
+        # MAX profiles share this field but carry no direction, so they are skipped
+        if io.get("direction") != "CONTROL":
+            continue
+        buttons.extend(
+            OlarmButton(
+                coordinator,
+                BUTTON_DESCRIPTIONS[f"hub_io_{action}"],
+                device_id,
+                io_index,
+                io.get("label", ""),
+            )
+            for action in SYSTEM_IO_ACTIONS
+        )
+
+
+def load_node_io_buttons(
+    coordinator: OlarmDataUpdateCoordinator,
+    config_entry: ConfigEntry,
+    buttons: list[OlarmButton],
+) -> None:
+    """Load buttons for Olarm ONE node (CONNECT / ENTRY) IOs configured as outputs."""
+    device_id = config_entry.data["device_id"]
+    device_profile_nodes = coordinator.data.device_profile_nodes or {}
+
+    for node_id, node in device_profile_nodes.items():
+        node_name = node.get("name") or node.get("type") or "Node"
+
+        for io_index, io in enumerate(node.get("io") or []):
+            if io.get("direction") != "CONTROL":
+                continue
+            buttons.extend(
+                OlarmButton(
+                    coordinator,
+                    BUTTON_DESCRIPTIONS[f"node_io_{action}"],
+                    device_id,
+                    io_index,
+                    io.get("label", ""),
+                    node_id,
+                    node_name,
+                )
+                for action in SYSTEM_IO_ACTIONS
+            )
+
+
 def load_user_panic_button(
     coordinator: OlarmDataUpdateCoordinator,
     config_entry: ConfigEntry,
@@ -730,6 +835,15 @@ class OlarmButton(OlarmEntity, ButtonEntity):
         result = await self.entity_description.press_fn(
             self.coordinator, self.device_id, self.button_index + 1, self.link_id
         )
+
+        # The API answers 200 with a FAILED action when a node is offline or on battery
+        if (
+            self.entity_description.key.startswith(("hub_io_", "node_io_"))
+            and result.get("actionStatus") == "FAILED"
+        ):
+            raise HomeAssistantError(
+                result.get("actionMsg") or "Olarm could not send the IO command"
+            )
 
         if self.entity_description.key == "user_panic" and result:
             message = result.get("actionMsg", "Panic button failed")

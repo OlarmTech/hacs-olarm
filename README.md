@@ -4,7 +4,7 @@
 
 We maintain this integration ourselves and ship it through HACS. Connect an [Olarm](https://www.olarm.com/) communicator to your alarm panel and your areas, zones and outputs appear in Home Assistant as entities you can automate against.
 
-Your areas become alarm control panels you can arm and disarm. Zones, power and I/O become binary sensors. PGMs, utility keys, LINK outputs and MAX outputs become buttons. Everything arrives over MQTT as it happens, so there is no polling interval. Sign-in is OAuth2.
+Your areas become alarm control panels you can arm and disarm. Zones, power and I/O become binary sensors. PGMs, utility keys, LINK outputs, MAX outputs and Olarm ONE IOs become buttons. Everything arrives over MQTT as it happens, so there is no polling interval. Sign-in is OAuth2.
 
 Panels: Paradox, DSC, IDS, Texecom, Honeywell Galaxy and Orisec — [full model list below](#supported-alarm-panels).
 
@@ -108,6 +108,10 @@ Zones are given a device class from the zone type configured on your panel — d
 | Output Open / Close / Pulse *(LINK)* | Drive a LINK output |
 | Relay Latch / Unlatch / Pulse *(LINK)* | Drive a LINK relay |
 | MAX Output Open / Close / Pulse | Drive a MAX output |
+| HUB IO Latch On / Latch Off / Toggle / Pulse | Drive an Olarm ONE HUB IO set up as an output |
+| IO Latch On / Latch Off / Toggle / Pulse *(node)* | Drive an output on an Olarm CONNECT or Olarm ENTRY linked to an Olarm ONE |
+
+Olarm ONE IO buttons are created only for IOs set up as outputs. An IO that drives an area indicator or siren cannot be controlled, and a node must be connected and on external power; pressing the button otherwise shows the reason as an error. The state of these IOs is not reported yet, so there are no matching binary sensors.
 
 Partial and custom arm profiles are buttons rather than alarm-panel modes because a single alarm control panel entity supports only one custom bypass action, while a panel may have up to four of each.
 
