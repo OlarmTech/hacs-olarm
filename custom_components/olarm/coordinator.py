@@ -36,6 +36,7 @@ class OlarmDeviceData:
     device_profile: dict[str, Any] = field(default_factory=dict)
     device_profile_links: dict[str, Any] = field(default_factory=dict)
     device_profile_io: dict[str, Any] = field(default_factory=dict)
+    device_profile_nodes: dict[str, Any] = field(default_factory=dict)
     device_zone_in_alarms: dict[int, dict[str, Any]] = field(default_factory=dict)
 
 
@@ -124,6 +125,7 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
                 device_profile=device.get("deviceProfile", {}),
                 device_profile_links=device.get("deviceProfileLinks", {}),
                 device_profile_io=device.get("deviceProfileIO", {}),
+                device_profile_nodes=device.get("deviceProfileNodes", {}),
             )
 
             _LOGGER.debug(
