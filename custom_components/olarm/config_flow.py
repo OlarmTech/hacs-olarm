@@ -22,6 +22,7 @@ from homeassistant.components.application_credentials import (
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
 
@@ -50,7 +51,7 @@ class OlarmOauth2FlowHandler(
     _expires_at: int | None = None
     _user_id: str | None = None
     _devices: list[dict[str, Any]] | None = None
-    _device_id: str | None = None
+    _device_ids: list[str] = []
     _oauth_data: dict[str, Any] | None = None
 
     @property
@@ -116,31 +117,38 @@ class OlarmOauth2FlowHandler(
     ) -> ConfigFlowResult:
         """Handle the device selection step.
 
-        A user can have many Olarms / devices so we need to ask them to select one for this home assistant instance
+        A user can have many Olarms / devices; one config entry manages the
+        selected set, sharing a single OAuth session and MQTT connection.
         """
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._device_id = user_input["select_device"]
-            _LOGGER.debug("Config: device selected (device_id=%s)", self._device_id)
+            self._device_ids = list(user_input["devices"])
+            if not self._device_ids:
+                errors["devices"] = "no_device_selected"
+            else:
+                _LOGGER.debug(
+                    "Config: %d device(s) selected", len(self._device_ids)
+                )
 
-            if self._oauth_data is None:
-                return self.async_abort(reason="oauth_data_missing")
+                if self._oauth_data is None:
+                    return self.async_abort(reason="oauth_data_missing")
 
-            client_id_suffix = self._get_next_client_id_suffix()
+                client_id_suffix = self._get_next_client_id_suffix()
 
-            data = {
-                "user_id": self._user_id,
-                "device_id": self._device_id,
-                "client_id_suffix": client_id_suffix,
-                "auth_implementation": self._oauth_data["auth_implementation"],
-                "token": self._oauth_data["token"],
-            }
+                data = {
+                    "user_id": self._user_id,
+                    "device_ids": self._device_ids,
+                    "client_id_suffix": client_id_suffix,
+                    "auth_implementation": self._oauth_data["auth_implementation"],
+                    "token": self._oauth_data["token"],
+                }
 
-            unique_id = self._device_id
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+                # One entry per Olarm account: the account id is the identity.
+                unique_id = self._user_id
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
 
-            return self.async_create_entry(title="Olarm Integration", data=data)
+                return self.async_create_entry(title="Olarm Integration", data=data)
 
         if self._devices is None:
             return self.async_abort(reason="no_devices_found")
@@ -154,7 +162,9 @@ class OlarmOauth2FlowHandler(
         )
         schema = vol.Schema(
             {
-                vol.Required("select_device"): vol.In(sorted_device_options),
+                vol.Required(
+                    "devices", default=list(sorted_device_options)
+                ): cv.multi_select(sorted_device_options),
             },
         )
 

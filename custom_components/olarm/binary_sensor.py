@@ -203,16 +203,14 @@ async def async_setup_entry(
 ) -> None:
     """Add binary sensors for a config entry."""
 
-    # get coordinator
-    coordinator = config_entry.runtime_data.coordinator
-
-    # load binary sensors
+    # load binary sensors for every device on this entry
     sensors: list[OlarmBinarySensor] = []
-    load_zone_sensors(coordinator, config_entry, sensors)
-    load_ac_power_sensor(coordinator, config_entry, sensors)
-    load_link_sensors(coordinator, config_entry, sensors)
-    load_max_sensors(coordinator, config_entry, sensors)
-    load_fence_sensors(coordinator, config_entry, sensors)
+    for device_id, coordinator in config_entry.runtime_data.coordinators.items():
+        load_zone_sensors(coordinator, device_id, sensors)
+        load_ac_power_sensor(coordinator, device_id, sensors)
+        load_link_sensors(coordinator, device_id, sensors)
+        load_max_sensors(coordinator, device_id, sensors)
+        load_fence_sensors(coordinator, device_id, sensors)
 
     _LOGGER.debug("BinarySensor: adding %d entities", len(sensors))
     async_add_entities(sensors)
@@ -220,11 +218,10 @@ async def async_setup_entry(
 
 def load_zone_sensors(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     sensors: list[OlarmBinarySensor],
 ) -> None:
     """Load zone sensors and bypass sensors."""
-    device_id = config_entry.data["device_id"]
     zones = coordinator.data.device_state.get("zones", [])
     labels = coordinator.data.device_profile.get("zonesLabels", [])
     types = coordinator.data.device_profile.get("zonesTypes", [])
@@ -247,7 +244,7 @@ def load_zone_sensors(
 
 def load_ac_power_sensor(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     sensors: list[OlarmBinarySensor],
 ) -> None:
     """Load AC power sensor."""
@@ -262,7 +259,7 @@ def load_ac_power_sensor(
             OlarmBinarySensor(
                 coordinator,
                 SENSOR_DESCRIPTIONS["ac_power"],
-                config_entry.data["device_id"],
+                device_id,
                 0,
                 ac_power_state,
                 "AC Power",
@@ -280,7 +277,7 @@ def load_ac_power_sensor(
             OlarmBinarySensor(
                 coordinator,
                 SENSOR_DESCRIPTIONS["ac_power_fence"],
-                config_entry.data["device_id"],
+                device_id,
                 0,
                 ac_power_state,
                 "AC Power",
@@ -291,7 +288,7 @@ def load_ac_power_sensor(
 
 def load_link_sensors(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     sensors: list[OlarmBinarySensor],
 ) -> None:
     """Load LINK inputs, outputs, and relays in latch mode."""
@@ -318,7 +315,7 @@ def load_link_sensors(
                         OlarmBinarySensor(
                             coordinator,
                             SENSOR_DESCRIPTIONS["link_input"],
-                            config_entry.data["device_id"],
+                            device_id,
                             io_index,
                             io_state,
                             io.get("label", ""),
@@ -335,7 +332,7 @@ def load_link_sensors(
                         OlarmBinarySensor(
                             coordinator,
                             SENSOR_DESCRIPTIONS["link_output"],
-                            config_entry.data["device_id"],
+                            device_id,
                             io_index,
                             io_state,
                             io.get("label", ""),
@@ -357,7 +354,7 @@ def load_link_sensors(
                     OlarmBinarySensor(
                         coordinator,
                         SENSOR_DESCRIPTIONS["relay_output"],
-                        config_entry.data["device_id"],
+                        device_id,
                         relay_index,
                         relay_state,
                         relay.get("label", ""),
@@ -370,7 +367,7 @@ def load_link_sensors(
 
 def load_max_sensors(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     sensors: list[OlarmBinarySensor],
 ) -> None:
     """Load Max IO inputs and outputs (outputs only in latch mode)."""
@@ -389,7 +386,7 @@ def load_max_sensors(
                     OlarmBinarySensor(
                         coordinator,
                         SENSOR_DESCRIPTIONS["max_input"],
-                        config_entry.data["device_id"],
+                        device_id,
                         io_index,
                         io_state,
                         io.get("label", ""),
@@ -402,7 +399,7 @@ def load_max_sensors(
                     OlarmBinarySensor(
                         coordinator,
                         SENSOR_DESCRIPTIONS["max_output"],
-                        config_entry.data["device_id"],
+                        device_id,
                         io_index,
                         io_state,
                         io.get("label", ""),
@@ -413,11 +410,10 @@ def load_max_sensors(
 
 def load_fence_sensors(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     sensors: list[OlarmBinarySensor],
 ) -> None:
     """Load fence zone sensors."""
-    device_id = config_entry.data["device_id"]
     fence_zones = coordinator.data.device_fence.get("zones", [])
     for zone_index, zone_state in enumerate(fence_zones):
         # fence zone is on or off

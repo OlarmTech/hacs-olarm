@@ -25,18 +25,19 @@
         },
         "error": {
             "invalid_auth": "Invalid authentication, please try again.",
+            "no_device_selected": "Select at least one device.",
             "oauth_failed": "OAuth authentication failed, please try again."
         },
         "step": {
             "device": {
                 "data": {
-                    "select_device": "Device"
+                    "devices": "Devices"
                 },
                 "data_description": {
-                    "select_device": "The Olarm device you would like to integrate"
+                    "devices": "The Olarm devices you would like to integrate"
                 },
-                "description": "Choose the Olarm device you would like to integrate. If your device is not listed, please ensure you have enabled public API access in your Olarm account for that device.",
-                "title": "Select device"
+                "description": "Choose the Olarm devices you would like to integrate. One entry manages all selected devices over a single connection. If a device is missing, ensure public API access is enabled for it in your Olarm account.",
+                "title": "Select devices"
             }
         }
     },
@@ -74,6 +75,10 @@
         "mqtt_disconnected": {
             "description": "The MQTT connection to the Olarm service has been lost: {reason}\n\nThe integration will automatically attempt to reconnect in the background. If this issue persists, check your internet connection and verify the Olarm service is operational.\n\nThis issue will clear automatically when the connection is restored.",
             "title": "MQTT connection to Olarm service lost"
+        },
+        "device_unavailable": {
+            "title": "Olarm device unavailable",
+            "description": "The Olarm device `{device_id}` could not be loaded. This usually means API access is disabled for that device, or the device was removed from the account.\n\nEnable Developer Settings -> API Access for the device in the Olarm app, then reload the integration."
         }
     }
 }
