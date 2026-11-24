@@ -275,21 +275,19 @@ async def async_setup_entry(
 ) -> None:
     """Add buttons for a config entry."""
 
-    # get coordinator
-    coordinator = config_entry.runtime_data.coordinator
-
     # init buttons
     buttons: list[OlarmButton] = []
 
-    # load buttons based on device configuration
-    load_zone_buttons(coordinator, config_entry, buttons)
-    load_pgm_buttons(coordinator, config_entry, buttons)
-    load_link_output_buttons(coordinator, config_entry, buttons)
-    load_link_relay_buttons(coordinator, config_entry, buttons)
-    load_max_output_buttons(coordinator, config_entry, buttons)
-    load_user_panic_button(coordinator, config_entry, buttons)
-    load_area_part_arm_buttons(coordinator, config_entry, buttons)
-    load_area_custom_arm_buttons(coordinator, config_entry, buttons)
+    # load buttons based on each device's configuration
+    for device_id, coordinator in config_entry.runtime_data.coordinators.items():
+        load_zone_buttons(coordinator, device_id, buttons)
+        load_pgm_buttons(coordinator, device_id, buttons)
+        load_link_output_buttons(coordinator, device_id, buttons)
+        load_link_relay_buttons(coordinator, device_id, buttons)
+        load_max_output_buttons(coordinator, device_id, buttons)
+        load_user_panic_button(coordinator, device_id, buttons)
+        load_area_part_arm_buttons(coordinator, device_id, buttons)
+        load_area_custom_arm_buttons(coordinator, device_id, buttons)
 
     _LOGGER.debug("Button: adding %d entities", len(buttons))
     async_add_entities(buttons)
@@ -297,12 +295,11 @@ async def async_setup_entry(
 
 def load_zone_buttons(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     buttons: list[OlarmButton],
 ) -> None:
     """Load zone bypass/unbypass buttons if enabled."""
 
-    device_id = config_entry.data["device_id"]
     zones = coordinator.data.device_state.get("zones", [])
     labels = coordinator.data.device_profile.get("zonesLabels", [])
 
@@ -330,11 +327,10 @@ def load_zone_buttons(
 
 def load_pgm_buttons(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     buttons: list[OlarmButton],
 ) -> None:
     """Load PGM and utility key buttons."""
-    device_id = config_entry.data["device_id"]
     device_profile = coordinator.data.device_profile
 
     # Load PGM buttons
@@ -401,11 +397,10 @@ def load_pgm_buttons(
 
 def load_link_output_buttons(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     buttons: list[OlarmButton],
 ) -> None:
     """Load LINK output buttons."""
-    device_id = config_entry.data["device_id"]
     device_profile_links = coordinator.data.device_profile_links
 
     if not device_profile_links:
@@ -462,11 +457,10 @@ def load_link_output_buttons(
 
 def load_link_relay_buttons(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     buttons: list[OlarmButton],
 ) -> None:
     """Load LINK relay buttons."""
-    device_id = config_entry.data["device_id"]
     device_profile_links = coordinator.data.device_profile_links
 
     if not device_profile_links:
@@ -523,11 +517,10 @@ def load_link_relay_buttons(
 
 def load_max_output_buttons(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     buttons: list[OlarmButton],
 ) -> None:
     """Load MAX output buttons."""
-    device_id = config_entry.data["device_id"]
     device_profile_io = coordinator.data.device_profile_io
 
     if not device_profile_io or not device_profile_io.get("io"):
@@ -574,12 +567,11 @@ def load_max_output_buttons(
 
 def load_user_panic_button(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     buttons: list[OlarmButton],
 ) -> None:
     """Load user panic button."""
 
-    device_id = config_entry.data["device_id"]
 
     buttons.append(
         OlarmButton(
@@ -594,11 +586,10 @@ def load_user_panic_button(
 
 def load_area_part_arm_buttons(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     buttons: list[OlarmButton],
 ) -> None:
     """Load partial arm buttons for each area based on alarmTypeActions."""
-    device_id = config_entry.data["device_id"]
     area_actions: list[str] = coordinator.data.device_alarm_type_actions.get(
         "areas", []
     )
@@ -630,7 +621,7 @@ def load_area_part_arm_buttons(
 
 def load_area_custom_arm_buttons(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     buttons: list[OlarmButton],
 ) -> None:
     """Load custom arm buttons for specific area/profile pairs from alarmTypeActions.
@@ -639,7 +630,6 @@ def load_area_custom_arm_buttons(
     so each action maps to exactly one button rather than fanning out across all
     areas.
     """
-    device_id = config_entry.data["device_id"]
     area_actions: list[str] = coordinator.data.device_alarm_type_actions.get(
         "areas", []
     )

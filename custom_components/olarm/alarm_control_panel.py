@@ -69,12 +69,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up Olarm alarm control panels for a config entry."""
 
-    # get coordinator
-    coordinator = config_entry.runtime_data.coordinator
-
-    # load alarm control panels
+    # load alarm control panels for every device on this entry
     panels: list[OlarmAlarmControlPanel] = []
-    load_area_panels(coordinator, config_entry, panels)
+    for device_id, coordinator in config_entry.runtime_data.coordinators.items():
+        load_area_panels(coordinator, device_id, panels)
 
     _LOGGER.debug("AlarmControlPanel: adding %d entities", len(panels))
     async_add_entities(panels)
@@ -82,11 +80,10 @@ async def async_setup_entry(
 
 def load_area_panels(
     coordinator: OlarmDataUpdateCoordinator,
-    config_entry: ConfigEntry,
+    device_id: str,
     panels: list[OlarmAlarmControlPanel],
 ) -> None:
     """Load alarm control panel entities for each area."""
-    device_id = config_entry.data["device_id"]
     areas = coordinator.data.device_state.get("areas", [])
     areas_labels = coordinator.data.device_profile.get("areasLabels", [])
 

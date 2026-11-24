@@ -52,12 +52,13 @@ class OlarmDataUpdateCoordinator(DataUpdateCoordinator[OlarmDeviceData]):
         entry: ConfigEntry,
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
         olarm_client: OlarmFlowClient,
+        device_id: str,
     ) -> None:
         """Create a new instance of the OlarmCoordinator."""
 
         self._oauth_session = oauth_session
         self._user_id = entry.data["user_id"]
-        self.device_id = entry.data["device_id"]
+        self.device_id = device_id
         self._olarm_connect_client = olarm_client
 
         super().__init__(

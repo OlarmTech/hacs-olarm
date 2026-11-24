@@ -11,7 +11,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import issue_registry as ir
 
+from .const import DOMAIN
 from .coordinator import OlarmDataUpdateCoordinator
 from .mqtt import OlarmFlowClientMQTT
 
@@ -20,8 +22,13 @@ from .mqtt import OlarmFlowClientMQTT
 class OlarmData:
     """A class that holds runtime data."""
 
-    coordinator: OlarmDataUpdateCoordinator
+    coordinators: dict[str, OlarmDataUpdateCoordinator]
     mqtt_client: OlarmFlowClientMQTT
+
+    @property
+    def coordinator(self) -> OlarmDataUpdateCoordinator:
+        """Return the first coordinator (backwards compatibility)."""
+        return next(iter(self.coordinators.values()))
 
 
 type OlarmConfigEntry = ConfigEntry[OlarmData]
@@ -35,8 +42,24 @@ _PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
+def _entry_device_ids(entry: ConfigEntry) -> list[str]:
+    """Return the device ids covered by a config entry.
+
+    Entries created before multi-device support carry a single ``device_id``.
+    """
+    device_ids = entry.data.get("device_ids")
+    if device_ids:
+        return list(device_ids)
+    device_id = entry.data.get("device_id")
+    return [device_id] if device_id else []
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> bool:
     """Set up olarm from a config entry."""
+
+    device_ids = _entry_device_ids(entry)
+    if not device_ids:
+        raise ConfigEntryError("No Olarm devices configured for this entry")
 
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -58,20 +81,55 @@ async def async_setup_entry(hass: HomeAssistant, entry: OlarmConfigEntry) -> boo
         session.token["access_token"], session.token["expires_at"]
     )
 
-    coordinator = OlarmDataUpdateCoordinator(hass, entry, session, olarm_client)
+    coordinators: dict[str, OlarmDataUpdateCoordinator] = {}
+    for device_id in device_ids:
+        coordinator = OlarmDataUpdateCoordinator(
+            hass, entry, session, olarm_client, device_id
+        )
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryNotReady as err:
+            # One unreachable device (or one without API access) must not take
+            # the whole entry down; surface it as a repair issue instead.
+            _LOGGER.warning("API: skipping device %s: %s", device_id, err)
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"device_unavailable_{device_id}",
+                is_fixable=False,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="device_unavailable",
+                translation_placeholders={"device_id": device_id},
+            )
+            continue
+        ir.async_delete_issue(hass, DOMAIN, f"device_unavailable_{device_id}")
+        coordinators[device_id] = coordinator
 
-    await coordinator.async_config_entry_first_refresh()
+    if not coordinators:
+        raise ConfigEntryNotReady("No Olarm devices could be loaded")
 
-    mqtt_client = OlarmFlowClientMQTT(hass, entry, olarm_client, coordinator)
+    mqtt_client = OlarmFlowClientMQTT(hass, entry, olarm_client, coordinators)
     try:
         await mqtt_client.init_mqtt()
     except (MqttTimeoutError, MqttConnectError) as err:
         raise ConfigEntryNotReady(f"Failed to connect to Olarm MQTT: {err}") from err
 
     entry.runtime_data = OlarmData(
-        coordinator=coordinator,
+        coordinators=coordinators,
         mqtt_client=mqtt_client,
     )
+
+    # Normalise legacy single-device entries and make the account the unique id.
+    updates: dict[str, object] = {}
+    if "device_ids" not in entry.data:
+        updates["data"] = {**entry.data, "device_ids": device_ids}
+    if entry.unique_id != entry.data["user_id"]:
+        updates["unique_id"] = entry.data["user_id"]
+    if updates:
+        try:
+            hass.config_entries.async_update_entry(entry, **updates)
+        except Exception:  # noqa: BLE001 - a failed migration must not break setup
+            _LOGGER.exception("Config: could not migrate entry to multi-device")
 
     try:
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

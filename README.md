@@ -156,9 +156,16 @@ Before installing the integration:
 2. Click "+ Add Integration"
 3. Search for "Olarm"
 4. Follow the OAuth2 authentication flow
-5. Select the device you want to add
+5. Select the devices you want to add
 
-Each config entry covers one Olarm device. To add another, repeat the steps and select the next device.
+One config entry covers every device on the Olarm account: all selected devices share a single OAuth
+session and a single MQTT connection (one subscription per device). Entries created by older versions
+(single `device_id`) are migrated to `device_ids` in place on first start, and the account id becomes
+the entry's unique id.
+
+Only devices with **Developer Settings → API Access** enabled appear in the device picker and can be
+read by the integration. A device that is listed in an entry but not API-enabled is skipped at setup
+and reported as a repair issue instead of failing the whole entry.
 
 ## How data updates
 
