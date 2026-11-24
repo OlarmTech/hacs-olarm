@@ -6,6 +6,7 @@ These can be armed, disarmed or partially armed.
 
 from __future__ import annotations
 
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -15,13 +16,18 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from .coordinator import OlarmDataUpdateCoordinator
 from .entity import OlarmEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+# Time in seconds to wait for an MQTT state update after sending a command
+# before reverting the optimistic pending state back to the actual area state.
+PENDING_STATE_TIMEOUT = 10
 
 # Mapping of Olarm area states to Home Assistant alarm states
 STATE_MAP: dict[str, AlarmControlPanelState] = {
@@ -129,6 +135,7 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         self.area_index = area_index
         self.area_label = area_label
         self.area_state = area_state
+        self._pending_timeout_cancel: CALLBACK_TYPE | None = None
 
         # Set unique ID and name
         self._attr_unique_id = f"{device_id}.area.{area_index}"
@@ -186,29 +193,103 @@ class OlarmAlarmControlPanel(OlarmEntity, AlarmControlPanelEntity):
         return attrs
 
     @callback
+    def _cancel_pending_timeout(self) -> None:
+        """Cancel the pending state timeout timer if active."""
+        if self._pending_timeout_cancel is not None:
+            self._pending_timeout_cancel()
+            self._pending_timeout_cancel = None
+
+    @callback
+    def _async_pending_timeout(self, _now: datetime) -> None:
+        """Reset pending state if no MQTT state change was received in time."""
+        self._pending_timeout_cancel = None
+        self._update_alarm_state()
+        _LOGGER.debug(
+            "AlarmControlPanel: pending state timed out, reverting (name=%s, area_state=%s, ha_state=%s)",
+            self._attr_name,
+            self.area_state,
+            self._attr_alarm_state,
+        )
+        self.async_write_ha_state()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up pending timeout timer when entity is removed."""
+        self._cancel_pending_timeout()
+        await super().async_will_remove_from_hass()
+
+    @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if not self.coordinator.data:
             return
 
+        areas = self.coordinator.data.device_state.get("areas", [])
+        new_area_state = (
+            areas[self.area_index] if self.area_index < len(areas) else self.area_state
+        )
+
+        # If a command is currently awaiting an MQTT state transition and the area state
+        # hasn't changed yet (e.g. an unrelated zone update arrived), keep the optimistic
+        # pending state until either the area state changes or the timeout expires.
+        if (
+            self._pending_timeout_cancel is not None
+            and new_area_state == self.area_state
+        ):
+            return
+
         # check if area_state has changed
         previous_area_state = self.area_state
 
+        self._cancel_pending_timeout()
         self._update_alarm_state()
 
         if self.area_state != previous_area_state:
-            _LOGGER.debug("AlarmControlPanel: state changed (name=%s, from=%s, to=%s, ha_state=%s)", self._attr_name, previous_area_state, self.area_state, self._attr_alarm_state)
+            _LOGGER.debug(
+                "AlarmControlPanel: state changed (name=%s, from=%s, to=%s, ha_state=%s)",
+                self._attr_name,
+                previous_area_state,
+                self.area_state,
+                self._attr_alarm_state,
+            )
             self.async_write_ha_state()
 
     async def _async_send_command(self, command: str) -> None:
         """Send command and provide UI feedback."""
-        _LOGGER.debug("AlarmControlPanel: sending command (name=%s, command=%s)", self._attr_name, command)
+        _LOGGER.debug(
+            "AlarmControlPanel: sending command (name=%s, command=%s)",
+            self._attr_name,
+            command,
+        )
+
+        self._cancel_pending_timeout()
+        area_state_before = self.area_state
 
         await self.coordinator.send_command(
             command, self.device_id, self.area_index + 1
         )
-        # Set to pending state for UI feedback while waiting for MQTT state to come through
+
+        # If an MQTT update already changed the area state while the command was in flight,
+        # keep the updated state rather than overwriting it with PENDING.
+        if self.area_state != area_state_before:
+            return
+
+        # If disarming when the area is already disarmed/notready in coordinator data
+        # (e.g. cancelling a stuck/optimistic pending state), restore DISARMED immediately.
+        if (
+            command == "device_area_disarm"
+            and STATE_MAP.get(self.area_state, AlarmControlPanelState.DISARMED)
+            == AlarmControlPanelState.DISARMED
+        ):
+            self._update_alarm_state()
+            self.async_write_ha_state()
+            return
+
+        # Set to pending state for UI feedback while waiting for MQTT state to come through,
+        # and schedule a timeout to revert if the panel rejects or ignores the command.
         self._attr_alarm_state = AlarmControlPanelState.PENDING
+        self._pending_timeout_cancel = async_call_later(
+            self.hass, PENDING_STATE_TIMEOUT, self._async_pending_timeout
+        )
         self.async_write_ha_state()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
